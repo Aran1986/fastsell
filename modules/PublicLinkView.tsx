@@ -11,8 +11,8 @@ const getCurrencySymbol = (curr: Currency) => {
   switch (curr) {
     case Currency.USD: return '$';
     case Currency.EUR: return '€';
-    case Currency.IRR: return 'ریال';
-    case Currency.CRYPTO: return '₮';
+    case Currency.IRR: return 'تومان'; // Improved label
+    case Currency.CRYPTO: return 'USDT';
     default: return '$';
   }
 };
@@ -27,7 +27,7 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
       const storageKey = `welcome_dismissed_${link.slug}`;
       const isDismissed = localStorage.getItem(storageKey);
       if (!isDismissed) {
-        const timer = setTimeout(() => setShowWelcome(true), 1200);
+        const timer = setTimeout(() => setShowWelcome(true), 800);
         return () => clearTimeout(timer);
       }
     }
@@ -42,10 +42,10 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
 
   if (!link) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white text-center min-h-[400px]">
-        <h1 className="text-6xl font-black text-slate-900 mb-6">۴۰۴</h1>
+      <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white text-center min-h-screen">
+        <h1 className="text-8xl font-black text-slate-100 mb-6 select-none">404</h1>
         <p className="text-slate-600 text-xl font-bold mb-8">فروشگاه مورد نظر پیدا نشد.</p>
-        <Link to="/" className="text-indigo-600 font-black border-b-2 border-indigo-600 pb-1">می‌خواهید لینک خود را بسازید؟ ←</Link>
+        <Link to="/" className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl">ساخت فروشگاه شخصی ←</Link>
       </div>
     );
   }
@@ -58,94 +58,110 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
   const buyBtnColor = link.buyButtonColor || mainColor;
 
   return (
-    <div className="flex-1 flex flex-col items-center py-12 px-4 max-w-md mx-auto w-full relative" dir="rtl">
+    <div className="min-h-screen bg-slate-50/50 flex flex-col items-center relative overflow-x-hidden" dir="rtl">
       
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-96 opacity-10 pointer-events-none" style={{ background: `linear-gradient(180deg, ${mainColor} 0%, transparent 100%)` }}></div>
+
       {/* Welcome Message Modal */}
       {showWelcome && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-700">
-          <div className="bg-white rounded-[3rem] p-10 w-full max-w-xs shadow-2xl relative animate-in zoom-in-95 duration-500 flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-8 mx-auto shadow-inner relative overflow-hidden" style={{ backgroundColor: `${mainColor}15`, color: mainColor }}>
-               <div className="absolute inset-0 opacity-10" style={{ backgroundColor: mainColor }}></div>
-               <svg className="w-10 h-10 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z"></path></svg>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-500">
+          <div className="bg-white rounded-[3.5rem] p-12 w-full max-w-sm shadow-2xl relative animate-in zoom-in-90 duration-300 flex flex-col items-center">
+            <div className="w-24 h-24 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-xl relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${mainColor}, #a855f7)`, color: 'white' }}>
+               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
             </div>
-            <h2 className="text-2xl font-black text-slate-900 text-center mb-4">خوش آمدید! ✨</h2>
+            <h2 className="text-3xl font-black text-slate-900 text-center mb-4">خوش آمدید! ✨</h2>
             <p className="text-slate-500 text-center text-sm leading-relaxed mb-10 font-bold">
-              به فروشگاه <span className="font-black" style={{ color: mainColor }}>«{link.title}»</span> خوش آمدید. ما بهترین محصولات خود را برای شما آماده کرده‌ایم.
+              ما در <span className="font-black" style={{ color: mainColor }}>«{link.title}»</span> آماده خدمت‌رسانی به شما هستیم. بهترین‌ها را انتخاب کنید.
             </p>
             <button 
               onClick={dismissWelcome}
               style={{ backgroundColor: buyBtnColor }}
-              className="w-full py-5 text-white font-black rounded-2xl shadow-2xl transition-all active:scale-95 hover:brightness-110"
+              className="w-full py-5 text-white font-black rounded-2xl shadow-xl transition-all active:scale-95 hover:brightness-110"
             >
-              متوجه شدم، بریم خرید!
+              مشاهده ویترین
             </button>
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <div className="text-center mb-12 w-full">
-        <div className="w-28 h-28 rounded-full mx-auto mb-6 border-4 border-white shadow-2xl flex items-center justify-center text-white text-5xl font-black ring-4 ring-slate-50 transition-transform hover:scale-105 duration-500" style={{ background: `linear-gradient(135deg, ${mainColor}, #a855f7)` }}>
-            {link.title.charAt(0)}
+      {/* Hero Header */}
+      <header className="w-full max-w-2xl pt-16 pb-12 px-6 text-center z-10">
+        <div className="relative inline-block mb-8">
+            <div className="w-32 h-32 rounded-[3rem] mx-auto border-8 border-white shadow-2xl flex items-center justify-center text-white text-5xl font-black ring-1 ring-slate-100 transform -rotate-3 transition-transform hover:rotate-0 duration-500" style={{ background: `linear-gradient(135deg, ${mainColor}, #a855f7)` }}>
+                {link.title.charAt(0)}
+            </div>
+            <div className="absolute -bottom-2 -right-2 bg-green-400 w-8 h-8 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+            </div>
         </div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-3">{link.title}</h1>
-        <p className="text-slate-500 px-8 text-sm leading-relaxed font-bold">{link.bio}</p>
+        <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">{link.title}</h1>
+        <p className="text-slate-500 max-w-md mx-auto text-base leading-relaxed font-bold bg-white/50 backdrop-blur-sm py-3 px-6 rounded-2xl border border-white/50">{link.bio}</p>
+        
         {productId && (
-            <Link to={`/s/${slug}`} className="mt-6 inline-block text-[11px] font-black uppercase px-6 py-2.5 rounded-full border transition-all hover:shadow-lg" style={{ color: mainColor, backgroundColor: `${mainColor}08`, borderColor: `${mainColor}25` }}>مشاهده کاتالوگ کامل فروشگاه</Link>
+            <Link to={`/s/${slug}`} className="mt-8 inline-flex items-center gap-2 text-[11px] font-black uppercase px-8 py-3 rounded-full border-2 transition-all hover:bg-white hover:shadow-xl" style={{ color: mainColor, borderColor: `${mainColor}20` }}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                بازگشت به کاتالوگ کامل
+            </Link>
         )}
-      </div>
+      </header>
 
-      {/* Products Grid/List */}
-      <div className="w-full space-y-6">
+      {/* Main Grid Content */}
+      <main className="w-full max-w-2xl px-6 pb-24 space-y-8">
         {displayProducts.length === 0 ? (
-            <div className="text-center py-20 text-slate-400 font-bold bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-              هنوز محصولی در این فروشگاه لیست نشده است.
+            <div className="text-center py-24 text-slate-300 font-bold bg-white rounded-[3.5rem] border-4 border-dashed border-slate-100">
+              هنوز کالا یا خدماتی اضافه نشده است.
             </div>
         ) : displayProducts.map(product => (
           <Link 
             to={`/checkout/${link.slug}/${product.id}`}
             key={product.id} 
-            className={`block bg-white border ${product.isFeatured ? 'border-indigo-200 ring-2 ring-indigo-50' : 'border-slate-200'} p-5 rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all group overflow-hidden relative`}
+            className="group block bg-white rounded-[3.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 overflow-hidden"
           >
-            {product.isFeatured && (
-              <div className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[8px] px-3 py-1 rounded-bl-2xl font-black uppercase tracking-widest z-10 shadow-lg">ویژه</div>
-            )}
-            <div className="flex items-center gap-6">
-                <div className="w-28 h-28 rounded-[2rem] overflow-hidden flex-shrink-0 bg-slate-50 border border-slate-50">
-                    <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={product.name} />
+            <div className="flex flex-col sm:flex-row">
+                <div className="sm:w-56 h-56 overflow-hidden relative">
+                    <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={product.name} />
+                    {product.isFeatured && (
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-indigo-600 text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg">ویژه</div>
+                    )}
                 </div>
-                <div className="flex-1 text-right">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-black text-slate-900 text-xl group-hover:text-indigo-600 transition-colors" style={{ color: mainColor }}>{product.name}</h3>
-                      <span className="text-[9px] bg-slate-50 px-2 py-0.5 rounded-full font-bold text-slate-300">{product.category}</span>
+                <div className="flex-1 p-8 flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-start justify-between mb-2">
+                           <h3 className="font-black text-slate-900 text-2xl group-hover:text-indigo-600 transition-colors">{product.name}</h3>
+                           <span className="text-[10px] bg-slate-50 px-3 py-1 rounded-full font-black text-slate-400 border border-slate-100">{product.category}</span>
+                        </div>
+                        <p className="text-sm text-slate-400 font-bold leading-relaxed line-clamp-2">{product.description}</p>
                     </div>
-                    <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed font-bold">{product.description}</p>
-                    <div className="mt-5 flex items-center justify-between">
-                        <span className="font-black text-slate-900 text-2xl" style={{ color: mainColor }} dir="ltr">{getCurrencySymbol(product.currency)} {product.price.toLocaleString()}</span>
-                        <div style={{ backgroundColor: buyBtnColor }} className="text-white px-7 py-3 rounded-[1.4rem] text-[12px] font-black shadow-lg transition-transform group-active:scale-95">
-                            خرید سریع
+                    
+                    <div className="mt-8 flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">قیمت نهایی</span>
+                            <span className="font-black text-slate-900 text-2xl" style={{ color: mainColor }}>
+                                {product.price.toLocaleString()} 
+                                <span className="text-sm mr-1">{getCurrencySymbol(product.currency)}</span>
+                            </span>
+                        </div>
+                        <div style={{ backgroundColor: buyBtnColor }} className="text-white px-8 py-4 rounded-[1.8rem] text-sm font-black shadow-lg shadow-indigo-100 transform group-hover:translate-x-[-8px] transition-all">
+                            خرید مستقیم
                         </div>
                     </div>
                 </div>
             </div>
           </Link>
         ))}
-      </div>
+      </main>
 
-      {/* Footer Branding */}
-      <div className="mt-20 text-center pb-12">
-        <Link to="/" className="inline-flex flex-col items-center gap-3 text-slate-300 hover:text-slate-500 transition-colors group">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Powered by</span>
-            <div className="flex items-center gap-2" dir="ltr">
-                <div className="w-6 h-6 bg-slate-200 rounded-lg flex items-center justify-center text-xs text-white font-black group-hover:bg-indigo-500 transition-colors">F</div>
-                <span className="text-sm font-bold tracking-tighter">
-                  <span className="font-black text-slate-400 group-hover:text-slate-900 transition-colors">FAS</span>
-                  <span className="logo-t text-slate-400 group-hover:text-indigo-500 transition-colors">t</span>
-                  <span className="font-black text-slate-400 group-hover:text-slate-900 transition-colors">Sell</span>
-                </span>
+      {/* Sticky Branding Footer */}
+      <footer className="mt-auto py-12 w-full text-center">
+        <Link to="/" className="inline-flex flex-col items-center gap-4 text-slate-300 hover:text-slate-600 transition-all group">
+            <div className="flex items-center gap-3" dir="ltr">
+                <div className="w-8 h-8 bg-slate-200 rounded-xl flex items-center justify-center text-sm text-white font-black group-hover:bg-indigo-600 transition-colors">F</div>
+                <span className="text-lg font-black tracking-tighter">FASTSell</span>
             </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-50">Empowering Modern Sellers</span>
         </Link>
-      </div>
+      </footer>
     </div>
   );
 };

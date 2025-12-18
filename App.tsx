@@ -14,6 +14,43 @@ import Header from './components/Header';
 
 const STORAGE_KEY = 'fastsell_data_v4';
 
+const DEMO_STORE: SalesLink = {
+  id: 'demo-123',
+  slug: 'demo-store',
+  title: 'کافه تخصصی مدرن',
+  bio: 'تجربه‌ای متفاوت از قهوه‌های تازه‌رست و اکسسوری‌های خاص دم‌آوری. ارسال سریع به تمام نقاط.',
+  themeColor: '#8b5e3c',
+  buyButtonColor: '#2d2d2d',
+  totalSales: 450,
+  products: [
+    {
+      id: 'p1',
+      name: 'قهوه اتیوپی یرگاچف',
+      description: 'عطر گلی و طعم یادهای مرکباتی با اسیدیته ملایم و دلنشین.',
+      price: 450000,
+      currency: Currency.IRR,
+      image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?q=80&w=600&auto=format&fit=crop',
+      category: 'دانه قهوه',
+      salesCount: 12,
+      isFeatured: true
+    },
+    {
+      id: 'p2',
+      name: 'V60 دریپر سرامیکی',
+      description: 'طراحی کلاسیک برای عصاره‌گیری حرفه‌ای و شفاف در منزل.',
+      price: 890000,
+      currency: Currency.IRR,
+      image: 'https://images.unsplash.com/photo-1544666107-594691494537?q=80&w=600&auto=format&fit=crop',
+      category: 'اکسسوری',
+      salesCount: 5
+    }
+  ],
+  orders: [],
+  defaultCurrency: Currency.IRR,
+  categories: ['دانه قهوه', 'اکسسوری', 'آموزش'],
+  bankDetails: { holderName: 'بخش دمو', cardNumber: '6037-XXXX-XXXX-XXXX' }
+};
+
 const App: React.FC = () => {
   const [links, setLinks] = useState<SalesLink[]>([]);
   const [userRegistered, setUserRegistered] = useState(false);
@@ -26,6 +63,8 @@ const App: React.FC = () => {
       if (parsed && parsed.length > 0) setUserRegistered(true);
     }
   }, []);
+
+  const allLinks = [...links, DEMO_STORE];
 
   const saveLinks = (updated: SalesLink[]) => {
     setLinks(updated);
@@ -43,8 +82,8 @@ const App: React.FC = () => {
       totalSales: 0,
       products: [],
       orders: [],
-      defaultCurrency: Currency.USD, // تغییر ارز پیش‌فرض به دلار
-      categories: ['General', 'Tech', 'Fashion'],
+      defaultCurrency: Currency.IRR,
+      categories: ['General'],
       bankDetails: { cardNumber: '', iban: '', holderName: '', paypalEmail: '', walletAddress: '' }
     };
     saveLinks([...links, newLink]);
@@ -90,7 +129,8 @@ const App: React.FC = () => {
     saveLinks(links.map(l => l.id === linkId ? { ...l, products: l.products.filter(p => p.id !== productId) } : l));
   };
 
-  const recordSale = (slug: string, productId: string, amount: number, customerData: { email: string, phone: string, address: string, postalCode: string }) => {
+  const recordSale = (slug: string, productId: string, amount: number, customerData: { email: string, phone: string, address: string, postalCode: string, transactionHash?: string }) => {
+    if (slug === 'demo-store') return;
     saveLinks(links.map(l => {
       if (l.slug === slug) {
         const product = l.products.find(p => p.id === productId);
@@ -104,6 +144,7 @@ const App: React.FC = () => {
           customerPhone: customerData.phone,
           customerAddress: customerData.address,
           customerPostalCode: customerData.postalCode,
+          transactionHash: customerData.transactionHash,
           status: 'pending',
           date: new Date().toISOString()
         };
@@ -122,7 +163,7 @@ const App: React.FC = () => {
             <Route path="/" element={<LandingPage />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/register" element={<Register onCreateLink={createLink} existingLinks={links} />} />
-            <Route path="/admin" element={<AdminDashboard links={links} onUpdateSlug={updateSlug} onUpdateOrder={updateOrder} />} />
+            <Route path="/admin" element={<AdminDashboard links={allLinks} onUpdateSlug={updateSlug} onUpdateOrder={updateOrder} />} />
             <Route path="/dashboard" element={
               userRegistered ? (
                 <div className="flex flex-col flex-1">
@@ -139,9 +180,9 @@ const App: React.FC = () => {
                 </div>
               ) : <Navigate to="/register" />
             } />
-            <Route path="/s/:slug" element={<PublicLinkView links={links} />} />
-            <Route path="/s/:slug/p/:productId" element={<PublicLinkView links={links} />} />
-            <Route path="/checkout/:slug/:productId" element={<Checkout links={links} onSaleSuccess={recordSale} />} />
+            <Route path="/s/:slug" element={<PublicLinkView links={allLinks} />} />
+            <Route path="/s/:slug/p/:productId" element={<PublicLinkView links={allLinks} />} />
+            <Route path="/checkout/:slug/:productId" element={<Checkout links={allLinks} onSaleSuccess={recordSale} />} />
           </Routes>
         </div>
       </HashRouter>

@@ -29,6 +29,7 @@ export interface Order {
   customerAddress: string;
   customerPostalCode: string;
   trackingNumber?: string;
+  transactionHash?: string; // New field for crypto TXID
   orderNote?: string;
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
   date: string;
@@ -37,8 +38,8 @@ export interface Order {
 export interface Product {
   id: string;
   name: string;
-  description: string; // AI Short Description
-  detailedDescription?: string; // Manual detailed description
+  description: string;
+  detailedDescription?: string;
   price: number;
   currency: Currency;
   image?: string;
