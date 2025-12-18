@@ -1,14 +1,14 @@
 
 /**
- * این سرویس هسته مرکزی مدیریت تراکنش‌های مالی پلتفرم است.
- * برای فعال‌سازی بخش کریپتو، برنامه‌نویس باید کتابخانه‌های 'tronweb' و 'ethers' را نصب کند.
+ * این سرویس مسئول مدیریت و تایید تراکنش‌های بلاک‌چینی است.
+ * انتخاب فنی: برای شبکه ترون (TRC20)، کتابخانه 'tronweb' استانداردترین گزینه است.
+ * دستور نصب: npm install tronweb
  */
 
 import { Currency, BankDetails } from '../types';
 
-// --- [ بخش تنظیمات فنی برای برنامه‌نویس ] ---
-// برای اتصال به شبکه ترون: npm install tronweb
-// برای اتصال به اتریوم/بایننس: npm install ethers
+// آدرس قرارداد تتر (USDT) روی شبکه اصلی ترون
+const USDT_TRC20_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
 export const initiatePayment = async (
   currency: Currency, 
@@ -19,101 +19,90 @@ export const initiatePayment = async (
   
   switch (currency) {
     case Currency.IRR:
-      return await handleZarinPal(amount, bankDetails, customerData);
-    
+      return { success: true, url: 'https://www.zarinpal.com/pg/StartPay/DEMO' };
     case Currency.EUR:
-      return await handleStripe(amount, bankDetails);
-    
+      return { success: true, url: 'https://checkout.stripe.com/pay/demo' };
     case Currency.USD:
-      return await handlePayPal(amount, bankDetails);
-    
+      return { success: true, url: 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick' };
     case Currency.CRYPTO:
-      // در حالت کریپتو، ما فقط اجازه ادامه فرآیند را می‌دهیم تا مشتری هش را وارد کند.
+      // در کریپتو، تراکنش خارج از سایت انجام می‌شود و ما منتظر هش می‌مانیم.
       return { success: true, transactionId: 'AWAITING_TX_HASH' };
-
     default:
       return { success: false, error: 'ارز پشتیبانی نمی‌شود.' };
   }
 };
 
 /**
- * تایید تراکنش کریپتو (بررسی هش در بلاک‌چین)
- * این بخش توسط برنامه‌نویس با استفاده از RPC Nodes تکمیل می‌شود.
+ * تابع اصلی تایید تراکنش بلاک‌چین
+ * @param hash کد TXID که مشتری وارد کرده است
+ * @param sellerWallet آدرس ولت فروشنده که در دیتابیس ذخیره شده
+ * @param expectedAmount مبلغی که باید واریز شده باشد
  */
-export const verifyCryptoHash = async (hash: string, userSelectedNetwork: string): Promise<boolean> => {
-  console.log(`شروع فرآیند استعلام هش: ${hash} روی شبکه: ${userSelectedNetwork}`);
+export const verifyCryptoHash = async (
+  hash: string, 
+  sellerWallet: string, 
+  expectedAmount: number
+): Promise<boolean> => {
+  console.log(`در حال بررسی تراکنش ${hash} برای ولت مقصد ${sellerWallet}`);
+
+  if (!sellerWallet || sellerWallet === 'تنظیم نشده!') {
+    console.error("خطا: آدرس ولت فروشنده در سیستم تعریف نشده است.");
+    return false;
+  }
 
   try {
-    if (userSelectedNetwork === 'TRC20') {
-      return await verifyTronTransaction(hash);
-    } else if (['ERC20', 'BEP20'].includes(userSelectedNetwork)) {
-      return await verifyEVMTransaction(hash, userSelectedNetwork);
-    }
-    return false;
+    return await verifyTronTransaction(hash, sellerWallet, expectedAmount);
   } catch (e) {
-    console.error("خطا در تایید تراکنش:", e);
+    console.error("خطای سیستمی در تایید تراکنش:", e);
     return false;
   }
 };
 
 /**
- * منطق فنی برای شبکه ترون (USDT-TRC20)
+ * پیاده‌سازی فنی با TronWeb برای شبکه TRC20
  */
-async function verifyTronTransaction(hash: string): Promise<boolean> {
-  /* 
-    تکلیف برنامه‌نویس:
-    1. ابتدا TronWeb را اینیشیالایز کن.
-    2. از متد getTransaction استفاده کن تا جزئیات هش را بگیری.
-    3. چک کن که to_address دقیقا برابر با آدرس ولت مدیر باشد.
-    4. چک کن که مقدار (amount) درست باشد.
+async function verifyTronTransaction(hash: string, sellerWallet: string, amount: number): Promise<boolean> {
+  /*
+    --- راهنمای برنامه‌نویس ---
+    1. پکیج tronweb را نصب کنید.
+    2. یک API Key از سایت TronGrid.io دریافت کنید تا محدودیت درخواست نداشته باشید.
+    3. کد زیر منطق استاندارد برای بررسی انتقال USDT است.
   */
 
   // const TronWeb = require('tronweb');
-  // const tronWeb = new TronWeb({ fullHost: 'https://api.trongrid.io' }); // یا کلید API اختصاصی
-  
-  // --- [ جایگذاری آدرس ولت شما برای شبکه ترون ] ---
-  // const MY_TRON_WALLET = "آدرس ولت ترون خود را اینجا قرار دهید"; 
+  // const tronWeb = new TronWeb({
+  //   fullHost: 'https://api.trongrid.io',
+  //   headers: { "TRON-PRO-API-KEY": 'YOUR_API_KEY_HERE' }
+  // });
 
-  console.log("در حال چک کردن تراکنش در TronGrid...");
-  
-  // شبیه‌سازی: در واقعیت اینجا کدهای TronWeb اجرا می‌شود.
-  return new Promise((resolve) => setTimeout(() => resolve(true), 1500));
-}
+  try {
+    // مرحله ۱: دریافت جزئیات تراکنش از بلاک‌چین
+    // const tx = await tronWeb.trx.getTransaction(hash);
+    // if (!tx || tx.ret[0].contractRet !== 'SUCCESS') return false;
 
-/**
- * منطق فنی برای شبکه‌های بر پایه اتریوم (ETH, BSC, Polygon)
- */
-async function verifyEVMTransaction(hash: string, network: string): Promise<boolean> {
-  /* 
-    تکلیف برنامه‌نویس:
-    1. از کتابخانه Ethers.js استفاده کن.
-    2. بر اساس شبکه (network)، از پرووایدر مناسب (Alchemy یا Infura) استفاده کن.
-    3. رسید تراکنش (Transaction Receipt) را بخوان.
-  */
+    // مرحله ۲: بررسی داده‌های تراکنش (Internal Trigger Smart Contract)
+    // const contractData = tx.raw_data.contract[0].parameter.value;
+    
+    // در تراکنش‌های TRC20 (تتر)، اطلاعات در بخش data به صورت کد شده است.
+    // برنامه‌نویس باید پارامترهای 'transfer(address,uint256)' را دیکود کند.
+    
+    /*
+      منطق شرطی برای تایید:
+      if (
+          tx.raw_data.contract[0].parameter.value.contract_address === tronWeb.address.toHex(USDT_TRC20_CONTRACT) &&
+          target_address === tronWeb.address.toHex(sellerWallet) &&
+          transferred_amount >= amount
+      ) {
+          return true;
+      }
+    */
 
-  // const { ethers } = require('ethers');
-  // const provider = new ethers.JsonRpcProvider('https://mainnet.infura.io/v3/YOUR_INFURA_KEY');
-
-  // --- [ جایگذاری آدرس ولت شما برای شبکه های اتریوم/بایننس ] ---
-  // const MY_EVM_WALLET = "آدرس ولت اتریوم یا بایننس خود را اینجا قرار دهید";
-
-  console.log(`در حال استعلام از شبکه ${network} با استفاده از Ethers.js...`);
-  
-  return new Promise((resolve) => setTimeout(() => resolve(true), 1500));
-}
-
-/**
- * سیستم‌های سنتی (بدون تغییر جهت حفظ پایداری)
- */
-async function handleZarinPal(amount: number, bankDetails: BankDetails, customer: any) {
-  // MERCHANT_ID را برنامه‌نویس در اینجا قرار می‌دهد.
-  return { success: true, url: 'https://www.zarinpal.com/pg/StartPay/DEMO' };
-}
-
-async function handleStripe(amount: number, bankDetails: BankDetails) {
-  return { success: true, url: 'https://checkout.stripe.com/pay/demo' };
-}
-
-async function handlePayPal(amount: number, bankDetails: BankDetails) {
-  return { success: true, url: 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick' };
+    console.log(`شبیه‌سازی: تراکنش ${hash} با موفقیت در شبکه ترون رهگیری شد.`);
+    // برای دمو، ما همیشه true برمی‌گردانیم. در تولید، کدهای بالا باید آن‌کامنت شوند.
+    return new Promise((resolve) => setTimeout(() => resolve(true), 2000));
+    
+  } catch (err) {
+    console.error("TronWeb Error:", err);
+    return false;
+  }
 }

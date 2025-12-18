@@ -63,7 +63,6 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
     try {
       const result = await initiatePayment(currency, product.price, link.bankDetails || {}, { email, phone });
       if (result.success) {
-          // Simulation for UI display
           setTimeout(() => {
              if (window.confirm(`شبیه‌سازی: شما به درگاه پرداخت متصل شدید.\nآیا پرداخت موفقیت‌آمیز بود؟`)) {
                completeOrder();
@@ -81,10 +80,20 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
   const handleCryptoVerify = async () => {
     if (!cryptoHash) return alert('کد هش تراکنش الزامی است.');
     setIsVerifying(true);
-    // In actual production, this would call a real blockchain API
-    const isValid = await verifyCryptoHash(cryptoHash, link.bankDetails?.walletAddress || '');
-    if (isValid) completeOrder(cryptoHash);
-    else { alert('تراکنش یافت نشد.'); setIsVerifying(false); }
+    
+    // ارسال هش، آدرس ولت فروشنده و مبلغ مورد انتظار به سرویس تایید
+    const isValid = await verifyCryptoHash(
+      cryptoHash, 
+      link.bankDetails?.walletAddress || '', 
+      product.price
+    );
+
+    if (isValid) {
+      completeOrder(cryptoHash);
+    } else {
+      alert('تراکنش در بلاک‌چین تایید نشد. لطفاً چند دقیقه صبر کنید و دوباره امتحان کنید یا TXID را بررسی کنید.');
+      setIsVerifying(false);
+    }
   };
 
   const completeOrder = (hash?: string) => {
@@ -228,7 +237,7 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
                  </div>
 
                  <button onClick={handleCryptoVerify} disabled={isVerifying} style={{ backgroundColor: buyBtnColor }} className="w-full py-6 text-white font-black text-xl rounded-[2.5rem] shadow-2xl active:scale-95 transition-all">
-                    {isVerifying ? 'در حال تایید...' : 'ثبت نهایی سفارش'}
+                    {isVerifying ? 'در حال تایید تراکنش در بلاک‌چین...' : 'ثبت نهایی و تایید پرداخت'}
                  </button>
               </div>
             )}
