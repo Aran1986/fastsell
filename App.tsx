@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SalesLink, Product, Currency, BankDetails, Order } from './types';
+import { LanguageProvider } from './context/LanguageContext';
 import Dashboard from './modules/Dashboard';
 import PublicLinkView from './modules/PublicLinkView';
 import Checkout from './modules/Checkout';
@@ -36,14 +37,14 @@ const App: React.FC = () => {
       id: Math.random().toString(36).substr(2, 9),
       slug: linkData.slug,
       title: linkData.title,
-      bio: 'به فروشگاه جدید من خوش آمدید!',
+      bio: 'Welcome to my new shop!',
       themeColor: '#6366f1',
       buyButtonColor: '#6366f1',
       totalSales: 0,
       products: [],
       orders: [],
-      defaultCurrency: Currency.IRR,
-      categories: ['عمومی', 'تکنولوژی', 'پوشاک'],
+      defaultCurrency: Currency.USD, // تغییر ارز پیش‌فرض به دلار
+      categories: ['General', 'Tech', 'Fashion'],
       bankDetails: { cardNumber: '', iban: '', holderName: '', paypalEmail: '', walletAddress: '' }
     };
     saveLinks([...links, newLink]);
@@ -114,35 +115,37 @@ const App: React.FC = () => {
   };
 
   return (
-    <HashRouter>
-      <div className="min-h-screen bg-slate-50 flex flex-col">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/docs" element={<Docs />} />
-          <Route path="/register" element={<Register onCreateLink={createLink} existingLinks={links} />} />
-          <Route path="/admin" element={<AdminDashboard links={links} onUpdateSlug={updateSlug} onUpdateOrder={updateOrder} />} />
-          <Route path="/dashboard" element={
-            userRegistered ? (
-              <div className="flex flex-col flex-1">
-                <Header />
-                <Dashboard 
-                  links={links} 
-                  onAddProduct={addProduct} 
-                  onDeleteProduct={deleteProduct} 
-                  onUpdateBankDetails={updateBankDetails}
-                  onUpdateProfile={updateProfile}
-                  onUpdateOrder={updateOrder}
-                  onUpdateThemeColor={updateThemeColor}
-                />
-              </div>
-            ) : <Navigate to="/register" />
-          } />
-          <Route path="/s/:slug" element={<PublicLinkView links={links} />} />
-          <Route path="/s/:slug/p/:productId" element={<PublicLinkView links={links} />} />
-          <Route path="/checkout/:slug/:productId" element={<Checkout links={links} onSaleSuccess={recordSale} />} />
-        </Routes>
-      </div>
-    </HashRouter>
+    <LanguageProvider>
+      <HashRouter>
+        <div className="min-h-screen bg-slate-50 flex flex-col">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/docs" element={<Docs />} />
+            <Route path="/register" element={<Register onCreateLink={createLink} existingLinks={links} />} />
+            <Route path="/admin" element={<AdminDashboard links={links} onUpdateSlug={updateSlug} onUpdateOrder={updateOrder} />} />
+            <Route path="/dashboard" element={
+              userRegistered ? (
+                <div className="flex flex-col flex-1">
+                  <Header />
+                  <Dashboard 
+                    links={links} 
+                    onAddProduct={addProduct} 
+                    onDeleteProduct={deleteProduct} 
+                    onUpdateBankDetails={updateBankDetails}
+                    onUpdateProfile={updateProfile}
+                    onUpdateOrder={updateOrder}
+                    onUpdateThemeColor={updateThemeColor}
+                  />
+                </div>
+              ) : <Navigate to="/register" />
+            } />
+            <Route path="/s/:slug" element={<PublicLinkView links={links} />} />
+            <Route path="/s/:slug/p/:productId" element={<PublicLinkView links={links} />} />
+            <Route path="/checkout/:slug/:productId" element={<Checkout links={links} onSaleSuccess={recordSale} />} />
+          </Routes>
+        </div>
+      </HashRouter>
+    </LanguageProvider>
   );
 };
 
