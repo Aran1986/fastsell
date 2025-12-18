@@ -33,8 +33,6 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
-  const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
-
   // Form States for New Product
   const [newProductName, setNewProductName] = useState('');
   const [newProductPrice, setNewProductPrice] = useState(0);
@@ -241,14 +239,14 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
           )}
 
           {activeTab === 'manage-links' && (
-            <div className="bg-white rounded-[2rem] p-10 border border-slate-200 space-y-8">
-              <h3 className="text-2xl font-black">مدیریت لینک‌های محصولات</h3>
-              <p className="text-slate-500 font-bold text-sm">در این بخش می‌توانید لینک مستقیم خرید هر محصول را برای استفاده در شبکه‌های اجتماعی کپی و مدیریت کنید.</p>
-              <div className="space-y-4">
+            <div className="bg-white rounded-[2rem] p-10 border border-slate-200 space-y-8 animate-in fade-in">
+              <h3 className="text-2xl font-black">مدیریت لینک‌های فروش مستقیم</h3>
+              <p className="text-slate-500 font-bold text-sm">از لینک‌های زیر برای هدایت مستقیم مشتری به صفحه پرداخت در اینستاگرام و تلگرام استفاده کنید.</p>
+              <div className="grid grid-cols-1 gap-4">
                 {activeLink?.products.map(p => {
                   const productLink = `https://fastsell.ir/#/checkout/${activeLink.slug}/${p.id}`;
                   return (
-                    <div key={p.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex flex-col md:flex-row items-center gap-4 group hover:bg-white hover:shadow-lg transition-all">
+                    <div key={p.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex flex-col md:flex-row items-center gap-4 group hover:bg-white hover:shadow-xl transition-all">
                       <div className="flex items-center gap-4 flex-1">
                         <img src={p.image} className="w-14 h-14 rounded-2xl object-cover shadow-sm" alt={p.name} />
                         <div>
@@ -260,7 +258,7 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
                         <div className="flex items-center bg-white border border-slate-200 rounded-2xl overflow-hidden px-4 py-3 shadow-inner group-hover:border-indigo-200">
                           <span className="flex-1 text-[11px] font-mono text-indigo-400 truncate text-left dir-ltr">{productLink}</span>
                           <button 
-                            onClick={() => handleCopy(productLink, 'لینک مستقیم محصول کپی شد.')} 
+                            onClick={() => handleCopy(productLink, 'لینک محصول کپی شد.')} 
                             className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-[11px] font-black mr-4 shadow-lg active:scale-95 transition-all"
                           >
                             کپی لینک
@@ -270,11 +268,6 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
                     </div>
                   );
                 })}
-                {activeLink?.products.length === 0 && (
-                  <div className="text-center py-20 text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-3xl">
-                    هنوز محصولی برای نمایش لینک وجود ندارد.
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -283,7 +276,7 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
             <div className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
               <table className="w-full text-right text-xs">
                 <thead className="bg-slate-50 border-b border-slate-100 text-slate-400 font-black">
-                  <tr><th className="p-4">محصول</th><th className="p-4">خریدار</th><th className="p-4">مبلغ</th><th className="p-4">وضعیت</th><th className="p-4">یادداشت فروشنده</th></tr>
+                  <tr><th className="p-4">محصول</th><th className="p-4">خریدار</th><th className="p-4">مبلغ</th><th className="p-4">وضعیت</th><th className="p-4">یادداشت</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {activeLink?.orders.map(o => (
@@ -302,13 +295,7 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
                         </select>
                       </td>
                       <td className="p-4">
-                        <input 
-                          type="text" 
-                          placeholder="یادداشت..." 
-                          value={o.orderNote || ''} 
-                          onChange={e => onUpdateOrder?.(activeLink.id, o.id, { orderNote: e.target.value })} 
-                          className="bg-slate-50 border border-slate-100 rounded px-3 py-2 text-[10px] outline-none w-full focus:bg-white transition-all" 
-                        />
+                        <input type="text" placeholder="یادداشت..." value={o.orderNote || ''} onChange={e => onUpdateOrder?.(activeLink.id, o.id, { orderNote: e.target.value })} className="bg-slate-50 border border-slate-100 rounded px-3 py-2 text-[10px] outline-none w-full" />
                       </td>
                     </tr>
                   ))}
@@ -325,35 +312,13 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
                   <input type="text" value={profileTitle} onChange={e => setProfileTitle(e.target.value)} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none font-black" />
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-slate-400 mb-2 uppercase">ارز پیش‌فرض کاتالوگ</label>
+                  <label className="block text-xs font-black text-slate-400 mb-2 uppercase">ارز کاتالوگ</label>
                   <select value={profileCurrency} onChange={e => setProfileCurrency(e.target.value as Currency)} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none font-black">
-                    <option value={Currency.IRR}>ریال ایران (درگاه بانکی)</option>
-                    <option value={Currency.USD}>دلار ($ - پی‌پال)</option>
-                    <option value={Currency.EUR}>یورو (€ - استرایپ)</option>
-                    <option value={Currency.CRYPTO}>کریپتوکارنسی (USDT)</option>
+                    <option value={Currency.IRR}>ریال (زرین‌پال)</option>
+                    <option value={Currency.USD}>دلار (PayPal)</option>
+                    <option value={Currency.EUR}>یورو (Stripe)</option>
+                    <option value={Currency.CRYPTO}>کریپتو (USDT)</option>
                   </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-black text-slate-400 mb-2 uppercase">بایوگرافی فروشگاه</label>
-                <textarea rows={3} value={profileBio} onChange={e => setProfileBio(e.target.value)} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none font-bold resize-none" />
-              </div>
-              <div className="pt-6 border-t border-slate-100">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-black">مدیریت دسته‌ها</h3>
-                  <button onClick={resetCats} className="text-xs text-indigo-600 font-black">بازگردانی پیش‌فرض</button>
-                </div>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {profileCats.map(c => (
-                    <div key={c} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full font-black text-sm">
-                      {c}
-                      <button onClick={() => setProfileCats(profileCats.filter(x => x !== c))} className="text-indigo-300 hover:text-red-500">×</button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2 max-w-sm">
-                  <input type="text" value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="نام دسته..." className="flex-1 px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none font-bold" />
-                  <button onClick={() => { if(newCatName) setProfileCats([...profileCats, newCatName]); setNewCatName(''); }} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black">افزودن</button>
                 </div>
               </div>
               <button onClick={handleSaveProfile} className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black shadow-xl">ذخیره پروفایل</button>
@@ -362,73 +327,44 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
 
           {activeTab === 'bank' && (
             <div className="bg-white rounded-[2rem] p-10 border border-slate-200 space-y-10">
-              <h3 className="text-2xl font-black">تنظیمات پرداخت و حساب‌ها</h3>
-              <p className="text-slate-400 font-bold text-sm">لطفاً فیلدهای مربوط به ارز فروشگاه خود را با دقت پر کنید:</p>
-              
+              <h3 className="text-2xl font-black">تنظیمات درگاه‌های پرداخت</h3>
               <div className="space-y-8">
-                {/* IRR Section */}
-                <div className="p-6 bg-green-50/30 border border-green-100 rounded-3xl space-y-4">
-                  <div className="font-black text-green-700 flex items-center gap-2">🏦 درگاه بانکی ایران (ریال)</div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input type="text" placeholder="شماره شبا (IR...)" value={bankData.iban || ''} onChange={e => setBankData({...bankData, iban: e.target.value})} className="w-full px-5 py-3 rounded-xl bg-white border border-slate-200 font-bold text-xs" />
-                    <input type="text" placeholder="نام صاحب حساب" value={bankData.holderName || ''} onChange={e => setBankData({...bankData, holderName: e.target.value})} className="w-full px-5 py-3 rounded-xl bg-white border border-slate-200 font-bold text-sm" />
-                    <input type="text" placeholder="شماره کارت" value={bankData.cardNumber || ''} onChange={e => setBankData({...bankData, cardNumber: e.target.value})} className="w-full px-5 py-3 rounded-xl bg-white border border-slate-200 font-bold text-sm" />
-                  </div>
-                </div>
-
-                {/* International Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-6 bg-blue-50/30 border border-blue-100 rounded-3xl space-y-4">
-                    <div className="font-black text-blue-600 flex items-center gap-2">💳 PayPal (دلار)</div>
-                    <input type="email" placeholder="PayPal Email Address" value={bankData.paypalEmail || ''} onChange={e => setBankData({...bankData, paypalEmail: e.target.value})} className="w-full px-5 py-3 rounded-xl bg-white border border-slate-200 font-bold outline-none" />
-                  </div>
-                  <div className="p-6 bg-indigo-50/30 border border-indigo-100 rounded-3xl space-y-4">
-                    <div className="font-black text-indigo-600 flex items-center gap-2">🌐 Stripe (یورو)</div>
-                    <input type="text" placeholder="Stripe Public Key / Link" value={bankData.stripeKey || ''} onChange={e => setBankData({...bankData, stripeKey: e.target.value})} className="w-full px-5 py-3 rounded-xl bg-white border border-slate-200 font-bold outline-none" />
-                  </div>
-                </div>
-
-                {/* Crypto Section */}
-                <div className="p-6 bg-orange-50/30 border border-orange-100 rounded-3xl space-y-4">
-                  <div className="font-black text-orange-600 flex items-center gap-2">₿ کریپتوکارنسی (USDT)</div>
+                <div className="p-6 bg-green-50 rounded-3xl border border-green-100">
+                  <div className="font-black text-green-700 mb-4 flex items-center gap-2">🏦 زرین‌پال (ریال)</div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" placeholder="Wallet Address" value={bankData.walletAddress || ''} onChange={e => setBankData({...bankData, walletAddress: e.target.value})} className="w-full px-5 py-3 rounded-xl bg-white border border-slate-200 font-mono text-[11px] outline-none" />
-                    <select value={bankData.network || 'TRC20'} onChange={e => setBankData({...bankData, network: e.target.value})} className="w-full px-5 py-3 rounded-xl bg-white border border-slate-200 font-bold">
-                      <option value="TRC20">شبکه TRC20 (Tron)</option>
-                      <option value="ERC20">شبکه ERC20 (Ethereum)</option>
-                      <option value="BEP20">شبکه BEP20 (Binance)</option>
-                    </select>
+                    <input type="text" placeholder="شماره شبا (IR...)" value={bankData.iban || ''} onChange={e => setBankData({...bankData, iban: e.target.value})} className="px-5 py-3 rounded-xl border border-slate-200 text-xs" />
+                    <input type="text" placeholder="نام صاحب حساب" value={bankData.holderName || ''} onChange={e => setBankData({...bankData, holderName: e.target.value})} className="px-5 py-3 rounded-xl border border-slate-200 text-sm" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100">
+                    <div className="font-black text-blue-600 mb-4">💳 PayPal Email</div>
+                    <input type="email" placeholder="example@paypal.com" value={bankData.paypalEmail || ''} onChange={e => setBankData({...bankData, paypalEmail: e.target.value})} className="w-full px-5 py-3 rounded-xl border border-slate-200" />
+                  </div>
+                  <div className="p-6 bg-orange-50 rounded-3xl border border-orange-100">
+                    <div className="font-black text-orange-600 mb-4">₿ Crypto Wallet (USDT)</div>
+                    <input type="text" placeholder="آدرس ولت..." value={bankData.walletAddress || ''} onChange={e => setBankData({...bankData, walletAddress: e.target.value})} className="w-full px-5 py-3 rounded-xl border border-slate-200 font-mono text-[10px]" />
                   </div>
                 </div>
               </div>
-              <button onClick={handleSaveBank} className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black shadow-xl">ذخیره تنظیمات بانکی</button>
+              <button onClick={handleSaveBank} className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black shadow-xl">ذخیره تنظیمات مالی</button>
             </div>
           )}
 
           {activeTab === 'appearance' && (
             <div className="bg-white rounded-[2rem] p-10 border border-slate-200 space-y-10">
-              <h3 className="text-2xl font-black">شخصی‌سازی ظاهر فروشگاه</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                  <label className="block text-xs font-black text-slate-400 mb-4 uppercase">رنگ تم برند (Theme Color)</label>
-                  <div className="flex items-center gap-4">
-                    <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="w-20 h-20 rounded-2xl border-none p-0 cursor-pointer overflow-hidden shadow-sm" />
-                    <span className="font-mono text-sm text-slate-500">{themeColor}</span>
-                  </div>
+              <h3 className="text-2xl font-black">شخصی‌سازی ظاهر</h3>
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 mb-4 uppercase">رنگ تم برند</label>
+                  <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="w-20 h-20 rounded-2xl cursor-pointer shadow-sm" />
                 </div>
-                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                  <label className="block text-xs font-black text-slate-400 mb-4 uppercase">رنگ دکمه «خرید سریع»</label>
-                  <div className="flex items-center gap-4">
-                    <input type="color" value={buyButtonColor} onChange={e => setBuyButtonColor(e.target.value)} className="w-20 h-20 rounded-2xl border-none p-0 cursor-pointer overflow-hidden shadow-sm" />
-                    <span className="font-mono text-sm text-slate-500">{buyButtonColor}</span>
-                  </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 mb-4 uppercase">رنگ دکمه خرید</label>
+                  <input type="color" value={buyButtonColor} onChange={e => setBuyButtonColor(e.target.value)} className="w-20 h-20 rounded-2xl cursor-pointer shadow-sm" />
                 </div>
               </div>
-              <div className="p-8 border-2 border-dashed border-slate-100 rounded-3xl text-center">
-                <p className="text-[10px] font-black text-slate-400 mb-6 uppercase">پیش‌نمایش زنده</p>
-                <button style={{ backgroundColor: buyButtonColor }} className="px-16 py-4 rounded-2xl text-white font-black shadow-xl transition-all hover:scale-105 active:scale-95">خرید سریع محصول</button>
-              </div>
-              <button onClick={() => onUpdateThemeColor?.(activeLink!.id, themeColor, buyButtonColor)} className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black shadow-xl">ذخیره تنظیمات ظاهر</button>
+              <button onClick={() => onUpdateThemeColor?.(activeLink!.id, themeColor, buyButtonColor)} className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black shadow-xl">اعمال تغییرات ظاهری</button>
             </div>
           )}
         </div>
@@ -440,22 +376,21 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
           <div className="bg-white rounded-[3rem] p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
             <h2 className="text-3xl font-black mb-8 text-slate-900">ثبت محصول جدید</h2>
             <div className="space-y-6">
-              {/* Featured Image Section */}
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400">تصویر شاخص محصول (Featured Image)</label>
+                <label className="text-xs font-black text-slate-400">تصویر محصول</label>
                 {tempImage ? (
                   <div className="relative h-72 bg-slate-100 rounded-3xl overflow-hidden shadow-inner border border-slate-200">
                     <Cropper image={tempImage} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
-                    <button onClick={finishCrop} className="absolute bottom-4 left-4 right-4 bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-xl">تایید و برش تصویر</button>
+                    <button onClick={finishCrop} className="absolute bottom-4 left-4 right-4 bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-xl">تایید و برش</button>
                   </div>
                 ) : croppedImage ? (
                   <div className="relative group overflow-hidden rounded-3xl border border-slate-100 shadow-md">
-                    <img src={croppedImage} className="w-full h-48 object-cover" />
+                    <img src={croppedImage} className="w-full h-48 object-cover" alt="" />
                     <button onClick={() => setCroppedImage(null)} className="absolute inset-0 bg-black/50 text-white font-black opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">تغییر تصویر</button>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-40 border-4 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors group">
-                    <span className="text-slate-400 font-bold group-hover:text-indigo-600">انتخاب تصویر شاخص</span>
+                  <label className="flex flex-col items-center justify-center w-full h-40 border-4 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:bg-slate-50 transition-colors">
+                    <span className="text-slate-400 font-bold">انتخاب عکس محصول</span>
                     <input type="file" className="hidden" onChange={e => {
                       const f = e.target.files?.[0];
                       if(f){
@@ -485,31 +420,18 @@ const Dashboard: React.FC<DashboardProps> = ({ links, onAddProduct, onDeleteProd
                 </select>
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                <input type="checkbox" checked={isFeatured} onChange={e => setIsFeatured(e.target.checked)} className="w-6 h-6 accent-indigo-600 rounded-lg cursor-pointer" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-black text-indigo-900">نمایش به عنوان محصول ویژه</span>
-                  <span className="text-[10px] text-indigo-400 font-bold">این محصول با نشان «ویژه» در بالای فروشگاه قرار می‌گیرد.</span>
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-black text-slate-400">توضیحات کوتاه هوشمند (AI)</label>
+                  <label className="text-xs font-black text-slate-400">توضیحات کوتاه (AI)</label>
                   <button onClick={async () => { if(newProductName){ setIsGenerating(true); setNewProductDesc(await generateProductDescription(newProductName)); setIsGenerating(false); } }} className="text-[10px] text-indigo-600 font-black hover:underline">
-                    {isGenerating ? 'در حال تولید...' : '✨ تولید با هوش مصنوعی'}
+                    {isGenerating ? 'درحال تولید...' : '✨ تولید با هوش مصنوعی'}
                   </button>
                 </div>
                 <textarea rows={2} value={newProductDesc} onChange={e => setNewProductDesc(e.target.value)} className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-100 outline-none font-bold resize-none" />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400">توضیحات تفصیلی (Detailed Description)</label>
-                <textarea rows={4} value={newDetailedDesc} onChange={e => setNewDetailedDesc(e.target.value)} className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-100 outline-none font-bold resize-none" placeholder="مشخصات کامل فنی، ابعاد، شرایط ارسال و ..." />
-              </div>
-
               <div className="flex gap-4 pt-6">
-                <button onClick={handleAddProduct} className="flex-[2] bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all">تایید و انتشار</button>
+                <button onClick={handleAddProduct} className="flex-[2] bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all">انتشار محصول</button>
                 <button onClick={() => setIsAddingProduct(false)} className="flex-1 bg-slate-100 text-slate-600 py-5 rounded-2xl font-black">لغو</button>
               </div>
             </div>
