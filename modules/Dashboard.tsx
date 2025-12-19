@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { SalesLink, Product, Currency, BankDetails, Order } from '../types';
 import PublicLinkView from './PublicLinkView';
 import { useLanguage } from '../context/LanguageContext';
@@ -26,8 +26,19 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const { links } = props;
   const { t } = useLanguage();
   const [activeLinkId, setActiveLinkId] = useState<string | null>(links[links.length - 1]?.id || null);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases'>('products');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // جمع‌آوری تمام خریدها (سفارشات کاربر از سایر فروشگاه‌ها)
+  // در دنیای واقعی این باید از بک‌اند بر اساس Auth گرفته شود
+  const myPurchases = useMemo(() => {
+    const orders: Order[] = [];
+    links.forEach(l => {
+      // در دمو تمام سفارشات ثبت شده را به عنوان خرید کاربر فعلی (نقش خریدار) نمایش می‌دهیم
+      orders.push(...(l.orders || []));
+    });
+    return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [links]);
 
   const activeLink = links.find(l => l.id === activeLinkId);
 
@@ -35,7 +46,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     navigator.clipboard.writeText(text).then(() => alert(msg));
   };
 
-  if (!activeLink && links.length > 0) {
+  if (!activeLink && links.length > 0 && activeTab !== 'purchases') {
       setActiveLinkId(links[0].id);
   }
 
@@ -44,14 +55,18 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       {/* Header Info */}
       <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900">{activeLink?.title}</h1>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs font-mono text-indigo-400">fastsell.ir/s/{activeLink?.slug}</span>
-            <button onClick={() => handleCopy(`https://fastsell.ir/#/s/${activeLink?.slug}`, 'Link copied!')} className="text-[10px] bg-slate-100 px-3 py-1.5 rounded-xl font-black hover:bg-slate-200 transition-all">Copy Store Link</button>
-          </div>
+          <h1 className="text-2xl font-black text-slate-900">
+            {activeTab === 'purchases' ? 'خرید‌های من' : activeLink?.title}
+          </h1>
+          {activeTab !== 'purchases' && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs font-mono text-indigo-400">fastsell.ir/s/{activeLink?.slug}</span>
+              <button onClick={() => handleCopy(`https://fastsell.ir/#/s/${activeLink?.slug}`, 'Link copied!')} className="text-[10px] bg-slate-100 px-3 py-1.5 rounded-xl font-black hover:bg-slate-200 transition-all">کپی لینک فروشگاه</button>
+            </div>
+          )}
         </div>
         <div className="flex gap-3">
-          <button onClick={() => setIsPreviewOpen(true)} className="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">Live Preview</button>
+          <button onClick={() => setIsPreviewOpen(true)} className="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">پیش‌نمایش زنده</button>
         </div>
       </div>
 
@@ -59,23 +74,33 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
         {/* Sidebar Navigation */}
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-white p-5 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-2">
-            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">Store Selection</h2>
+            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">نقش فروشنده</h2>
             {links.map(l => (
-              <button key={l.id} onClick={() => setActiveLinkId(l.id)} className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeLinkId === l.id ? 'bg-indigo-50 text-indigo-600 font-black border border-indigo-100' : 'hover:bg-slate-50 text-slate-500 font-bold'}`}>
+              <button key={l.id} onClick={() => { setActiveLinkId(l.id); if(activeTab === 'purchases') setActiveTab('products'); }} className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeLinkId === l.id && activeTab !== 'purchases' ? 'bg-indigo-50 text-indigo-600 font-black border border-indigo-100' : 'hover:bg-slate-50 text-slate-500 font-bold'}`}>
                 <span>{l.title}</span>
-                {activeLinkId === l.id && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full shadow-lg shadow-indigo-200 animate-pulse"></div>}
+                {activeLinkId === l.id && activeTab !== 'purchases' && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full shadow-lg shadow-indigo-200 animate-pulse"></div>}
               </button>
             ))}
-            <div className="h-px bg-slate-100 my-6 mx-4"></div>
+            
+            <div className="h-px bg-slate-100 my-4 mx-4"></div>
+            
+            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">نقش خریدار</h2>
+            <button onClick={() => setActiveTab('purchases')} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === 'purchases' ? 'bg-green-600 text-white shadow-xl shadow-green-100' : 'hover:bg-slate-50 text-slate-600'}`}>
+              <span className="text-xl">🛍️</span>
+              <span>خرید‌های من</span>
+            </button>
+
+            <div className="h-px bg-slate-100 my-4 mx-4"></div>
+
+            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">تنظیمات فروشگاه فعال</h2>
             {[
               { id: 'products', label: t('products'), icon: '📦' },
               { id: 'orders', label: t('orders'), icon: '📝' },
-              { id: 'manage-links', label: t('manageLinks'), icon: '🔗' },
               { id: 'profile', label: t('profile'), icon: '👤' },
               { id: 'bank', label: t('bank'), icon: '💳' },
               { id: 'appearance', label: t('appearance'), icon: '🎨' },
             ].map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'hover:bg-slate-50 text-slate-600'}`}>
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id as any); }} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'hover:bg-slate-50 text-slate-600'}`}>
                 <span className="text-xl">{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
@@ -83,18 +108,40 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
           </div>
         </div>
 
-        {/* Main Modular Content Area */}
+        {/* Main Content Area */}
         <div className="lg:col-span-3">
-          {activeLink && (
+          {activeTab === 'purchases' ? (
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm animate-in fade-in">
+              <h3 className="text-xl font-black mb-8">تاریخچه خریدهای من</h3>
+              <div className="space-y-4">
+                {myPurchases.length === 0 ? (
+                  <div className="text-center py-20 text-slate-300 font-bold italic">هنوز خریدی ثبت نکرده‌اید.</div>
+                ) : myPurchases.map(order => (
+                  <div key={order.id} className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-[2rem] border border-slate-100 hover:bg-slate-50 transition-all">
+                    <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-2xl">🎁</div>
+                    <div className="flex-1 text-center md:text-right">
+                      <div className="font-black text-slate-900">{order.productName}</div>
+                      <div className="text-[10px] text-slate-400 mt-1">خریداری شده از پلتفرم - شناسه سفارش: {order.id}</div>
+                    </div>
+                    <div className="text-center md:text-left">
+                       <div className="font-black text-indigo-600">{order.amount.toLocaleString()} <span className="text-[10px]">{order.currency}</span></div>
+                       <div className={`mt-2 px-3 py-1 rounded-full text-[9px] font-black inline-block ${order.status === 'delivered' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
+                          {order.status === 'pending' ? 'در حال پردازش' : 'تکمیل شده'}
+                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : activeLink ? (
             <>
               {activeTab === 'products' && <ProductManager activeLink={activeLink} onAddProduct={props.onAddProduct} onDeleteProduct={props.onDeleteProduct} />}
               {activeTab === 'orders' && <OrderManager activeLink={activeLink} onUpdateOrder={props.onUpdateOrder} />}
-              {activeTab === 'manage-links' && <LinkManager activeLink={activeLink} />}
               {activeTab === 'profile' && <ProfileManager activeLink={activeLink} onUpdateProfile={props.onUpdateProfile} />}
               {activeTab === 'bank' && <PaymentSettings activeLink={activeLink} onUpdateBankDetails={props.onUpdateBankDetails} />}
               {activeTab === 'appearance' && <AppearanceSettings activeLink={activeLink} onUpdateThemeColor={props.onUpdateThemeColor} />}
             </>
-          )}
+          ) : null}
         </div>
       </div>
 

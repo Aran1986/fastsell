@@ -10,12 +10,6 @@ const Header: React.FC = () => {
 
   const langs = [
     { code: 'en', label: 'English' },
-    { code: 'es', label: 'Español' },
-    { code: 'fr', label: 'Français' },
-    { code: 'pt', label: 'Português' },
-    { code: 'zh', label: '中文' },
-    { code: 'hi', label: 'हिन्दी' },
-    { code: 'ja', label: '日本語' },
     { code: 'fa', label: 'فارسی' }
   ];
 
@@ -31,6 +25,9 @@ const Header: React.FC = () => {
           </span>
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
+          <Link to="/marketplace" className="text-xs font-black text-slate-700 hover:text-indigo-600 transition-colors hidden md:block">
+            ویترین عمومی ✨
+          </Link>
           <select 
             key={language}
             value={language} 
@@ -41,9 +38,6 @@ const Header: React.FC = () => {
               <option key={l.code} value={l.code}>{l.label}</option>
             ))}
           </select>
-          <Link to="/docs" className="text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors hidden sm:block">Docs</Link>
-          <Link to="/admin" className="text-[10px] font-bold text-slate-300 hover:text-indigo-600 transition-colors uppercase tracking-widest hidden sm:block">Admin</Link>
-          <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
           <Link to="/dashboard" className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[11px] font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
             {t('dashboard')}
           </Link>

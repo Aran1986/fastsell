@@ -81,7 +81,6 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
     if (!cryptoHash) return alert('کد هش تراکنش الزامی است.');
     setIsVerifying(true);
     
-    // ارسال هش، آدرس ولت فروشنده و مبلغ مورد انتظار به سرویس تایید
     const isValid = await verifyCryptoHash(
       cryptoHash, 
       link.bankDetails?.walletAddress || '', 
@@ -103,15 +102,33 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95" dir="rtl">
-        <div className="w-32 h-32 bg-green-50 text-green-500 rounded-[3rem] flex items-center justify-center mb-8 shadow-inner animate-bounce">
-          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95" dir="rtl">
+        <div className="bg-white rounded-[4rem] p-12 max-w-lg w-full shadow-2xl border border-slate-100 flex flex-col items-center">
+            <div className="w-24 h-24 bg-green-50 text-green-500 rounded-[2rem] flex items-center justify-center mb-8 shadow-inner animate-bounce">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h1 className="text-4xl font-black text-slate-900 mb-4">پرداخت موفقیت‌آمیز بود! ✨</h1>
+            <p className="text-slate-500 font-bold mb-10 leading-relaxed">
+                سفارش شما در پلتفرم ثبت شد. می‌توانید وضعیت سفارش خود را در داشبورد مشاهده کنید.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                <button 
+                  onClick={() => navigate('/marketplace')} 
+                  className="bg-indigo-600 text-white px-8 py-5 rounded-2xl font-black shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
+                >
+                  مشاهده ویترین عمومی
+                </button>
+                <button 
+                  onClick={() => navigate(`/s/${slug}`)} 
+                  className="bg-slate-100 text-slate-600 px-8 py-5 rounded-2xl font-black hover:bg-slate-200 transition-all"
+                >
+                  بازگشت به فروشگاه
+                </button>
+            </div>
+            
+            <Link to="/dashboard" className="mt-8 text-indigo-500 font-black text-sm hover:underline">مشاهده تاریخچه خرید من در داشبورد ←</Link>
         </div>
-        <h1 className="text-4xl font-black text-slate-900 mb-4">سفارش شما ثبت شد!</h1>
-        <p className="text-slate-500 font-bold mb-12 max-w-sm mx-auto leading-relaxed">
-            پرداخت با موفقیت انجام شد. اطلاعات سفارش و کد رهگیری به زودی برای شما ارسال خواهد شد.
-        </p>
-        <button onClick={() => navigate(`/s/${slug}`)} style={{ backgroundColor: buyBtnColor }} className="text-white px-12 py-5 rounded-[2rem] font-black shadow-2xl transition-transform active:scale-95">بازگشت به فروشگاه</button>
       </div>
     );
   }
@@ -233,7 +250,6 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
                         value={cryptoHash}
                         onChange={e => setCryptoHash(e.target.value)}
                     />
-                    <p className="text-[10px] text-slate-400 font-bold px-4">بعد از اتمام واریز در تراست ولت یا صرافی، کد TXID را از رسید کپی کنید.</p>
                  </div>
 
                  <button onClick={handleCryptoVerify} disabled={isVerifying} style={{ backgroundColor: buyBtnColor }} className="w-full py-6 text-white font-black text-xl rounded-[2.5rem] shadow-2xl active:scale-95 transition-all">
