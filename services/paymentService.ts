@@ -1,17 +1,17 @@
 
 /**
- * این سرویس مسئول مدیریت و تایید تراکنش‌های بلاک‌چینی است.
- * انتخاب فنی: برای شبکه ترون (TRC20)، کتابخانه 'tronweb' استانداردترین گزینه است.
- * دستور نصب: npm install tronweb
+ * این سرویس بخش منطق مالی و تاییدیه بلاک‌چین را مدیریت می‌کند.
+ * در یک سیستم واقعی، این کدها باید در محیط Node.js (سمت سرور) اجرا شوند تا کاربر نتواند آن‌ها را دستکاری کند.
  */
 
 import { Currency, BankDetails } from '../types';
 // @ts-ignore - TronWeb doesn't have official TypeScript types
 import TronWeb from 'tronweb';
 
-// آدرس قرارداد تتر (USDT) روی شبکه اصلی ترون
 const USDT_TRC20_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
+// Exported standalone function to fix import error in Checkout.tsx
+/** استعلام وضعیت درگاه‌های سنتی */
 export const initiatePayment = async (
   currency: Currency,
   amount: number,
@@ -34,11 +34,10 @@ export const initiatePayment = async (
   }
 };
 
-/**
- * تابع اصلی تایید تراکنش بلاک‌چین
- * @param hash کد TXID که مشتری وارد کرده است
- * @param sellerWallet آدرس ولت فروشنده که در دیتابیس ذخیره شده
- * @param expectedAmount مبلغی که باید واریز شده باشد
+// Exported standalone function to fix import error in Checkout.tsx
+/** 
+ * هسته تایید تراکنش USDT-TRC20 
+ * این تابع نقش بک‌اند را در تایید اصالت پول بازی می‌کند.
  */
 export const verifyCryptoHash = async (
   hash: string,
@@ -47,10 +46,8 @@ export const verifyCryptoHash = async (
 ): Promise<boolean> => {
   console.log(`در حال بررسی تراکنش ${hash} برای ولت مقصد ${sellerWallet}`);
 
-  if (!sellerWallet || sellerWallet === 'تنظیم نشده!') {
-    console.error("خطا: آدرس ولت فروشنده در سیستم تعریف نشده است.");
-    return false;
-  }
+  // امنیت: چک کردن صحت آدرس ولت فروشنده
+  if (!sellerWallet || sellerWallet.length < 10) return false;
 
   try {
     return await verifyTronTransaction(hash, sellerWallet, expectedAmount);
@@ -155,4 +152,15 @@ async function verifyTronTransaction(hash: string, sellerWallet: string, amount:
     console.error("خطا در تایید تراکنش:", err);
     return false;
   }
-}
+};
+
+export const PaymentEngine = {
+  /** استعلام وضعیت درگاه‌های سنتی */
+  initiate: initiatePayment,
+
+  /** 
+   * هسته تایید تراکنش USDT-TRC20 
+   * این تابع نقش بک‌اند را در تایید اصالت پول بازی می‌کند.
+   */
+  verifyUSDT: verifyCryptoHash
+};

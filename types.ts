@@ -22,6 +22,9 @@ export interface Order {
   id: string;
   productId: string;
   productName: string;
+  productImage?: string;
+  storeName?: string;
+  storeSlug?: string;
   amount: number;
   currency: Currency;
   customerEmail: string;
@@ -29,7 +32,7 @@ export interface Order {
   customerAddress: string;
   customerPostalCode: string;
   trackingNumber?: string;
-  transactionHash?: string; // New field for crypto TXID
+  transactionHash?: string;
   orderNote?: string;
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
   date: string;
@@ -50,6 +53,7 @@ export interface Product {
 
 export interface SalesLink {
   id: string;
+  ownerEmail: string; // کلید اتصال فروشگاه به کاربر
   slug: string;
   title: string;
   bio: string;
@@ -61,4 +65,10 @@ export interface SalesLink {
   defaultCurrency: Currency;
   categories: string[];
   bankDetails?: BankDetails;
+}
+
+export interface AppUser {
+  email: string;
+  name?: string;
+  registeredAt: string;
 }
