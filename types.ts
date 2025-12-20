@@ -22,8 +22,8 @@ export interface Order {
   id: string;
   productId: string;
   productName: string;
-  productImage?: string; // Added for marketplace history
-  storeName?: string;     // Added to know where it was bought from
+  productImage?: string;
+  storeName?: string;
   storeSlug?: string;
   amount: number;
   currency: Currency;
@@ -53,6 +53,7 @@ export interface Product {
 
 export interface SalesLink {
   id: string;
+  ownerEmail: string; // کلید اتصال فروشگاه به کاربر
   slug: string;
   title: string;
   bio: string;
@@ -70,5 +71,4 @@ export interface AppUser {
   email: string;
   name?: string;
   registeredAt: string;
-  lastUsedEmail?: string; // For tracking guest buyers
 }

@@ -9,8 +9,6 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { t, dir } = useLanguage();
 
-  const isRtl = dir === 'rtl';
-
   return (
     <div className="bg-white overflow-x-hidden">
       <Header />
@@ -39,10 +37,10 @@ const LandingPage: React.FC = () => {
               {t('startBtn')}
             </button>
             <button 
-              onClick={() => navigate('/s/demo-store')}
+              onClick={() => navigate('/marketplace')}
               className="px-12 py-7 text-2xl font-black text-slate-700 bg-slate-100 rounded-[3rem] hover:bg-slate-200 transition-all border border-slate-200"
             >
-              🚀 مشاهده دمو مشتری
+              🚀 ویترین عمومی محصولات
             </button>
           </div>
         </div>
@@ -110,7 +108,7 @@ const LandingPage: React.FC = () => {
               <h3 className="text-3xl font-black">{t('step1Title')}</h3>
               <p className="text-slate-400 leading-relaxed font-bold">نام برند خود را انتخاب کنید و لینک اختصاصی بگیرید. این هویت شما در اینترنت است.</p>
               <div className="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 shadow-inner">
-                <div className="text-sm font-mono text-indigo-400" dir="ltr">fastsell.ir/s/your-brand</div>
+                <div className="text-xs font-mono text-indigo-400" dir="ltr">.../s/your-brand</div>
               </div>
             </div>
 

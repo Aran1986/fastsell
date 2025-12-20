@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SalesLink, Product, Currency, BankDetails, Order } from './types';
+import { SalesLink, Product, Currency, AppUser } from './types';
 import { LanguageProvider } from './context/LanguageContext';
 import { ApiService } from './services/apiService';
 
@@ -10,38 +10,40 @@ import PublicLinkView from './modules/PublicLinkView';
 import Checkout from './modules/Checkout';
 import LandingPage from './modules/LandingPage';
 import Register from './modules/Register';
-import AdminDashboard from './modules/AdminDashboard';
-import Docs from './modules/Docs';
 import Marketplace from './modules/Marketplace';
 import Header from './components/Header';
 
 const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [links, setLinks] = useState<SalesLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // واکشی داده‌ها از "بک‌اند" در هنگام لود برنامه
   useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const allStores = await ApiService.getAllStores();
-        setLinks(allStores);
-      } catch (e) {
-        console.error("Failed to fetch from backend", e);
-      } finally {
-        setIsLoading(false);
-      }
+    const init = async () => {
+      const user = await ApiService.getCurrentUser();
+      setCurrentUser(user);
+      const allStores = await ApiService.getAllStores();
+      setLinks(allStores);
+      setIsLoading(false);
     };
-    fetchInitialData();
+    init();
   }, []);
 
   const refreshData = async () => {
-    const allStores = await ApiService.getAllStores();
-    setLinks(allStores);
+    const all = await ApiService.getAllStores();
+    setLinks(all);
+  };
+
+  const handleLogin = async (email: string) => {
+    const user = await ApiService.login(email);
+    setCurrentUser(user);
   };
 
   const createLink = async (linkData: { title: string; slug: string }) => {
+    if (!currentUser) return;
     const newLink: SalesLink = {
       id: Math.random().toString(36).substr(2, 9),
+      ownerEmail: currentUser.email,
       slug: linkData.slug,
       title: linkData.title,
       bio: 'به فروشگاه جدید من خوش آمدید!',
@@ -58,31 +60,7 @@ const App: React.FC = () => {
     await refreshData();
   };
 
-  const handleUpdateStore = async (updatedStore: SalesLink) => {
-    await ApiService.saveStore(updatedStore);
-    await refreshData();
-  };
-
-  const recordSale = async (slug: string, productId: string, amount: number, customerData: any) => {
-    await ApiService.createOrder(slug, {
-      productId,
-      productName: customerData.productName || 'Product',
-      amount,
-      currency: customerData.currency || Currency.USD,
-      customerEmail: customerData.email,
-      customerPhone: customerData.phone,
-      customerAddress: customerData.address,
-      customerPostalCode: customerData.postalCode,
-      transactionHash: customerData.transactionHash
-    });
-    await refreshData();
-  };
-
-  if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  );
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
     <LanguageProvider>
@@ -91,39 +69,62 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/marketplace" element={<Marketplace links={links} />} />
-            <Route path="/register" element={<Register onCreateLink={createLink} existingLinks={links} />} />
+            <Route path="/register" element={<Register onLogin={handleLogin} onCreateLink={createLink} existingLinks={links} user={currentUser} />} />
             <Route path="/dashboard" element={
-              links.length > 0 ? (
+              currentUser ? (
                 <div className="flex flex-col flex-1">
-                  <Header />
+                  <Header onLogout={() => { ApiService.logout(); setCurrentUser(null); }} user={currentUser} />
                   <Dashboard 
-                    links={links} 
-                    onAddProduct={(id, p) => {
+                    links={links.filter(l => l.ownerEmail === currentUser.email)} 
+                    allLinksForPurchases={links}
+                    currentUser={currentUser}
+                    onAddProduct={async (id, p) => {
                       const store = links.find(l => l.id === id);
-                      if(store) handleUpdateStore({...store, products: [...store.products, {...p, id: Math.random().toString(36).substr(2, 9), salesCount: 0}]});
+                      if(store) {
+                        const updated = {...store, products: [...store.products, {...p, id: Math.random().toString(36).substr(2, 9), salesCount: 0}]};
+                        await ApiService.saveStore(updated);
+                        await refreshData();
+                      }
                     }}
-                    onDeleteProduct={(id, pid) => {
+                    onDeleteProduct={async (id, pid) => {
                       const store = links.find(l => l.id === id);
-                      if(store) handleUpdateStore({...store, products: store.products.filter(p => p.id !== pid)});
+                      if(store) {
+                        const updated = {...store, products: store.products.filter(p => p.id !== pid)};
+                        await ApiService.saveStore(updated);
+                        await refreshData();
+                      }
                     }}
-                    onUpdateBankDetails={(id, bank) => {
+                    onUpdateBankDetails={async (id, bank) => {
                       const store = links.find(l => l.id === id);
-                      if(store) handleUpdateStore({...store, bankDetails: bank});
+                      if(store) { await ApiService.saveStore({...store, bankDetails: bank}); await refreshData(); }
                     }}
-                    onUpdateProfile={(id, data) => {
+                    onUpdateProfile={async (id, data) => {
                       const store = links.find(l => l.id === id);
-                      if(store) handleUpdateStore({...store, ...data});
+                      if(store) { await ApiService.saveStore({...store, ...data}); await refreshData(); }
                     }}
-                    onUpdateThemeColor={(id, color, btn) => {
+                    onUpdateThemeColor={async (id, color, btn) => {
                       const store = links.find(l => l.id === id);
-                      if(store) handleUpdateStore({...store, themeColor: color, buyButtonColor: btn});
+                      if(store) { await ApiService.saveStore({...store, themeColor: color, buyButtonColor: btn}); await refreshData(); }
                     }}
                   />
                 </div>
               ) : <Navigate to="/register" />
             } />
             <Route path="/s/:slug" element={<PublicLinkView links={links} />} />
-            <Route path="/checkout/:slug/:productId" element={<Checkout links={links} onSaleSuccess={recordSale} />} />
+            <Route path="/checkout/:slug/:productId" element={<Checkout links={links} onSaleSuccess={async (slug, pid, amt, data) => {
+              await ApiService.createOrder(slug, {
+                productId: pid,
+                productName: data.productName || 'Product',
+                amount: amt,
+                currency: data.currency || Currency.IRR,
+                customerEmail: data.email,
+                customerPhone: data.phone,
+                customerAddress: data.address,
+                customerPostalCode: data.postalCode,
+                transactionHash: data.transactionHash
+              });
+              await refreshData();
+            }} />} />
           </Routes>
         </div>
       </HashRouter>

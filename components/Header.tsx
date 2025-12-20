@@ -4,8 +4,14 @@ import { Link } from 'react-router-dom';
 import Logo from './Logo';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageCode } from '../constants/translations';
+import { AppUser } from '../types';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onLogout?: () => void;
+  user?: AppUser | null;
+}
+
+const Header: React.FC<HeaderProps> = ({ onLogout, user }) => {
   const { language, setLanguage, t } = useLanguage();
 
   const langs = [
@@ -28,6 +34,16 @@ const Header: React.FC = () => {
           <Link to="/marketplace" className="text-xs font-black text-slate-700 hover:text-indigo-600 transition-colors hidden md:block">
             ویترین عمومی ✨
           </Link>
+          
+          <div className="h-4 w-px bg-slate-200 hidden md:block"></div>
+
+          {user && (
+            <div className="hidden lg:flex flex-col items-end">
+              <span className="text-[9px] font-black text-slate-400 uppercase">{user.email}</span>
+              <button onClick={onLogout} className="text-[9px] font-black text-red-400 hover:text-red-600">خروج</button>
+            </div>
+          )}
+
           <select 
             key={language}
             value={language} 

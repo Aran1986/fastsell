@@ -1,34 +1,51 @@
 
-/**
- * این فایل نقش بک‌اند (Backend) پلتفرم شما را ایفا می‌کند.
- * تمام درخواست‌های مربوط به دیتابیس از اینجا عبور می‌کنند.
- */
+import { SalesLink, Product, Order, Currency, BankDetails, AppUser } from '../types';
 
-import { SalesLink, Product, Order, Currency, BankDetails } from '../types';
+const STORES_KEY = 'fastsell_stores_v2';
+const USERS_KEY = 'fastsell_users_v2';
+const SESSION_KEY = 'fastsell_current_user';
 
-const DB_KEY = 'fastsell_cloud_db_v1';
-
-// شبیه‌سازی تاخیر شبکه برای واقعی‌تر شدن تجربه کاربری
-const networkDelay = () => new Promise(resolve => setTimeout(resolve, 800));
+const networkDelay = () => new Promise(resolve => setTimeout(resolve, 500));
 
 export const ApiService = {
   
-  // --- [ بخش فروشگاه‌ها و محصولات ] ---
+  // --- [ بخش کاربران ] ---
+  async getCurrentUser(): Promise<AppUser | null> {
+    const data = localStorage.getItem(SESSION_KEY);
+    return data ? JSON.parse(data) : null;
+  },
 
-  /** دریافت تمام فروشگاه‌ها برای ویترین عمومی */
-  async getAllStores(): Promise<SalesLink[]> {
+  async login(email: string): Promise<AppUser> {
     await networkDelay();
-    const data = localStorage.getItem(DB_KEY);
+    const usersRaw = localStorage.getItem(USERS_KEY);
+    let users: AppUser[] = usersRaw ? JSON.parse(usersRaw) : [];
+    
+    let user = users.find(u => u.email === email);
+    if (!user) {
+      user = { email, registeredAt: new Date().toISOString() };
+      users.push(user);
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+    
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    return user;
+  },
+
+  async logout() {
+    localStorage.removeItem(SESSION_KEY);
+  },
+
+  // --- [ بخش فروشگاه‌ها ] ---
+  async getAllStores(): Promise<SalesLink[]> {
+    const data = localStorage.getItem(STORES_KEY);
     return data ? JSON.parse(data) : [];
   },
 
-  /** دریافت یک فروشگاه خاص با اسلاگ */
-  async getStoreBySlug(slug: string): Promise<SalesLink | null> {
-    const stores = await this.getAllStores();
-    return stores.find(s => s.slug === slug) || null;
+  async getMyStores(email: string): Promise<SalesLink[]> {
+    const all = await this.getAllStores();
+    return all.filter(s => s.ownerEmail === email);
   },
 
-  /** ذخیره یا بروزرسانی فروشگاه (نقش POST/PUT در بک‌اند) */
   async saveStore(store: SalesLink): Promise<void> {
     await networkDelay();
     const stores = await this.getAllStores();
@@ -40,12 +57,9 @@ export const ApiService = {
       stores.push(store);
     }
     
-    localStorage.setItem(DB_KEY, JSON.stringify(stores));
+    localStorage.setItem(STORES_KEY, JSON.stringify(stores));
   },
 
-  // --- [ بخش سفارشات و فروش ] ---
-
-  /** ثبت سفارش جدید در دیتابیس مرکزی */
   async createOrder(storeSlug: string, orderData: Omit<Order, 'id' | 'date' | 'status'>): Promise<Order> {
     await networkDelay();
     const stores = await this.getAllStores();
@@ -60,31 +74,10 @@ export const ApiService = {
       status: 'pending'
     };
 
-    // بروزرسانی موجودی و سفارشات فروشگاه در "دیتابیس"
     stores[storeIndex].orders = [...(stores[storeIndex].orders || []), newOrder];
     stores[storeIndex].totalSales += newOrder.amount;
     
-    // بروزرسانی آمار محصول
-    const productIndex = stores[storeIndex].products.findIndex(p => p.id === newOrder.productId);
-    if (productIndex > -1) {
-      stores[storeIndex].products[productIndex].salesCount += 1;
-    }
-
-    localStorage.setItem(DB_KEY, JSON.stringify(stores));
+    localStorage.setItem(STORES_KEY, JSON.stringify(stores));
     return newOrder;
-  },
-
-  /** دریافت خریدهای یک کاربر خاص بر اساس ایمیل (Role: Buyer) */
-  async getOrdersByCustomer(email: string): Promise<Order[]> {
-    await networkDelay();
-    const stores = await this.getAllStores();
-    const allOrders: Order[] = [];
-    
-    stores.forEach(s => {
-      const customerOrders = (s.orders || []).filter(o => o.customerEmail === email);
-      allOrders.push(...customerOrders);
-    });
-    
-    return allOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 };
