@@ -6,17 +6,19 @@
  */
 
 import { Currency, BankDetails } from '../types';
+// @ts-ignore - TronWeb doesn't have official TypeScript types
+import TronWeb from 'tronweb';
 
 // آدرس قرارداد تتر (USDT) روی شبکه اصلی ترون
 const USDT_TRC20_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
 export const initiatePayment = async (
-  currency: Currency, 
-  amount: number, 
+  currency: Currency,
+  amount: number,
   bankDetails: BankDetails,
   customerData: { email: string; phone: string }
 ): Promise<{ success: boolean; url?: string; transactionId?: string; error?: string }> => {
-  
+
   switch (currency) {
     case Currency.IRR:
       return { success: true, url: 'https://www.zarinpal.com/pg/StartPay/DEMO' };
@@ -39,8 +41,8 @@ export const initiatePayment = async (
  * @param expectedAmount مبلغی که باید واریز شده باشد
  */
 export const verifyCryptoHash = async (
-  hash: string, 
-  sellerWallet: string, 
+  hash: string,
+  sellerWallet: string,
   expectedAmount: number
 ): Promise<boolean> => {
   console.log(`در حال بررسی تراکنش ${hash} برای ولت مقصد ${sellerWallet}`);
@@ -58,51 +60,99 @@ export const verifyCryptoHash = async (
   }
 };
 
+
 /**
  * پیاده‌سازی فنی با TronWeb برای شبکه TRC20
  */
 async function verifyTronTransaction(hash: string, sellerWallet: string, amount: number): Promise<boolean> {
-  /*
-    --- راهنمای برنامه‌نویس ---
-    1. پکیج tronweb را نصب کنید.
-    2. یک API Key از سایت TronGrid.io دریافت کنید تا محدودیت درخواست نداشته باشید.
-    3. کد زیر منطق استاندارد برای بررسی انتقال USDT است.
-  */
 
-  // const TronWeb = require('tronweb');
-  // const tronWeb = new TronWeb({
-  //   fullHost: 'https://api.trongrid.io',
-  //   headers: { "TRON-PRO-API-KEY": 'YOUR_API_KEY_HERE' }
-  // });
+  const tronWeb = new TronWeb({
+    fullHost: 'https://api.trongrid.io'
+  });
 
   try {
     // مرحله ۱: دریافت جزئیات تراکنش از بلاک‌چین
-    // const tx = await tronWeb.trx.getTransaction(hash);
-    // if (!tx || tx.ret[0].contractRet !== 'SUCCESS') return false;
+    const tx = await tronWeb.trx.getTransaction(hash);
 
-    // مرحله ۲: بررسی داده‌های تراکنش (Internal Trigger Smart Contract)
-    // const contractData = tx.raw_data.contract[0].parameter.value;
-    
-    // در تراکنش‌های TRC20 (تتر)، اطلاعات در بخش data به صورت کد شده است.
-    // برنامه‌نویس باید پارامترهای 'transfer(address,uint256)' را دیکود کند.
-    
-    /*
-      منطق شرطی برای تایید:
-      if (
-          tx.raw_data.contract[0].parameter.value.contract_address === tronWeb.address.toHex(USDT_TRC20_CONTRACT) &&
-          target_address === tronWeb.address.toHex(sellerWallet) &&
-          transferred_amount >= amount
-      ) {
-          return true;
-      }
-    */
+    if (!tx || !tx.ret || tx.ret[0].contractRet !== 'SUCCESS') {
+      console.log('تراکنش یافت نشد یا موفق نبود');
+      return false;
+    }
 
-    console.log(`شبیه‌سازی: تراکنش ${hash} با موفقیت در شبکه ترون رهگیری شد.`);
-    // برای دمو، ما همیشه true برمی‌گردانیم. در تولید، کدهای بالا باید آن‌کامنت شوند.
-    return new Promise((resolve) => setTimeout(() => resolve(true), 2000));
-    
+    // مرحله ۲: بررسی نوع قرارداد
+    const contract = tx.raw_data.contract[0];
+
+    if (contract.type !== 'TriggerSmartContract') {
+      console.log('این تراکنش از نوع TRC20 نیست');
+      return false;
+    }
+
+    const contractData = contract.parameter.value;
+
+    // مرحله ۳: بررسی آدرس قرارداد USDT
+    const contractAddress = tronWeb.address.fromHex(contractData.contract_address);
+
+    if (contractAddress !== USDT_TRC20_CONTRACT) {
+      console.log('این تراکنش USDT نیست');
+      return false;
+    }
+
+    // مرحله ۴: دیکود کردن data تراکنش
+    // در TRC20، data شامل: 
+    // - 8 کاراکتر اول: function selector برای transfer (a9059cbb)
+    // - 64 کاراکتر بعدی: آدرس گیرنده
+    // - 64 کاراکتر بعدی: مقدار (به wei)
+
+    const data = contractData.data;
+
+    if (!data || data.length < 136) {
+      console.log('فرمت data نامعتبر است');
+      return false;
+    }
+
+    // بررسی function selector (باید a9059cbb باشد برای transfer)
+    const functionSelector = data.substring(0, 8);
+    if (functionSelector !== 'a9059cbb') {
+      console.log('این تراکنش transfer نیست');
+      return false;
+    }
+
+    // استخراج آدرس گیرنده (64 کاراکتر بعدی، 24 کاراکتر اول صفر است)
+    const recipientHex = '41' + data.substring(32, 72); // 41 پیشوند آدرس ترون
+    const recipientAddress = tronWeb.address.fromHex(recipientHex);
+
+    // استخراج مقدار (64 کاراکتر آخر به صورت hex)
+    const amountHex = data.substring(72, 136);
+    const transferredAmount = parseInt(amountHex, 16) / 1e6; // USDT دارای 6 decimal است
+
+    // مرحله ۵: بررسی شرایط
+    console.log('اطلاعات تراکنش:');
+    console.log('- قرارداد:', contractAddress);
+    console.log('- گیرنده:', recipientAddress);
+    console.log('- مقدار:', transferredAmount, 'USDT');
+    console.log('- انتظار گیرنده:', sellerWallet);
+    console.log('- انتظار مقدار:', amount, 'USDT');
+
+    // تبدیل آدرس فروشنده به فرمت استاندارد برای مقایسه
+    const normalizedSellerWallet = tronWeb.address.fromHex(
+      tronWeb.address.toHex(sellerWallet)
+    );
+
+    if (recipientAddress !== normalizedSellerWallet) {
+      console.log('❌ آدرس گیرنده مطابقت ندارد');
+      return false;
+    }
+
+    if (transferredAmount < amount) {
+      console.log('❌ مقدار کمتر از مورد انتظار است');
+      return false;
+    }
+
+    console.log('✅ تراکنش با موفقیت تایید شد');
+    return true;
+
   } catch (err) {
-    console.error("TronWeb Error:", err);
+    console.error("خطا در تایید تراکنش:", err);
     return false;
   }
 }
