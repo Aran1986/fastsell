@@ -36,6 +36,10 @@ export interface Order {
   orderNote?: string;
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
   date: string;
+  source: 'direct' | 'marketplace';
+  systemFee: number; // مبلغ کسر شده توسط سیستم
+  affiliateReward: number; // مبلغی که به معرف می‌رسد
+  sellerNet: number; // مبلغ خالص دریافتی فروشنده
 }
 
 export interface Product {
@@ -53,7 +57,7 @@ export interface Product {
 
 export interface SalesLink {
   id: string;
-  ownerEmail: string; // کلید اتصال فروشگاه به کاربر
+  ownerEmail: string; 
   slug: string;
   title: string;
   bio: string;
@@ -71,4 +75,6 @@ export interface AppUser {
   email: string;
   name?: string;
   registeredAt: string;
+  referralCode: string; // کد دعوت اختصاصی کاربر
+  referredBy?: string; // کد دعوت کسی که این کاربر را معرفی کرده
 }

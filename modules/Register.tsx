@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SalesLink, AppUser } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import Header from '../components/Header';
 
 interface RegisterProps {
-  onLogin: (email: string) => void;
+  onLogin: (email: string, referredBy?: string) => void;
   onCreateLink: (data: { title: string; slug: string }) => void;
   existingLinks: SalesLink[];
   user: AppUser | null;
@@ -15,12 +15,15 @@ interface RegisterProps {
 const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLinks, user }) => {
   const { t, dir } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [shopName, setShopName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugError, setSlugError] = useState('');
 
-  const isRtl = dir === 'rtl';
+  // استخراج کد معرف از URL
+  const queryParams = new URLSearchParams(location.search);
+  const refCode = queryParams.get('ref');
 
   useEffect(() => {
     if (shopName) {
@@ -40,7 +43,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    onLogin(email);
+    onLogin(email, refCode || undefined);
   };
 
   const handleCreateShop = (e: React.FormEvent) => {
@@ -58,6 +61,13 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
           <div className="max-w-md w-full bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-200 animate-in zoom-in-95">
             <h2 className="text-3xl font-black text-slate-900 mb-2">ورود به سیستم 🔐</h2>
             <p className="text-slate-500 mb-8 text-sm font-bold">برای مدیریت فروشگاه‌ها و مشاهده خریدهایتان وارد شوید.</p>
+            
+            {refCode && (
+              <div className="mb-6 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 text-indigo-600 text-[10px] font-black flex items-center gap-2">
+                <span>🤝</span> شما توسط کاربر با کد <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-lg">{refCode}</span> دعوت شده‌اید.
+              </div>
+            )}
+
             <form onSubmit={handleAuth} className="space-y-6">
               <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="آدرس ایمیل خود را وارد کنید" className="w-full px-6 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-100 outline-none font-bold text-center" />
               <button type="submit" className="w-full py-5 bg-indigo-600 text-white font-black text-lg rounded-2xl shadow-xl shadow-indigo-100 active:scale-95 transition-all">ادامه مسیر</button>

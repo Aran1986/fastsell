@@ -12,6 +12,7 @@ import LandingPage from './modules/LandingPage';
 import Register from './modules/Register';
 import Marketplace from './modules/Marketplace';
 import Header from './components/Header';
+import Transparency from './modules/Transparency';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -34,9 +35,10 @@ const App: React.FC = () => {
     setLinks(all);
   };
 
-  const handleLogin = async (email: string) => {
-    const user = await ApiService.login(email);
+  const handleLogin = async (email: string, referredBy?: string) => {
+    const user = await ApiService.login(email, referredBy);
     setCurrentUser(user);
+    await refreshData();
   };
 
   const createLink = async (linkData: { title: string; slug: string }) => {
@@ -68,6 +70,7 @@ const App: React.FC = () => {
         <div className="min-h-screen bg-slate-50 flex flex-col">
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/transparency" element={<Transparency />} />
             <Route path="/marketplace" element={<Marketplace links={links} />} />
             <Route path="/register" element={<Register onLogin={handleLogin} onCreateLink={createLink} existingLinks={links} user={currentUser} />} />
             <Route path="/dashboard" element={
@@ -106,22 +109,34 @@ const App: React.FC = () => {
                       const store = links.find(l => l.id === id);
                       if(store) { await ApiService.saveStore({...store, themeColor: color, buyButtonColor: btn}); await refreshData(); }
                     }}
+                    onUpdateOrder={async (linkId, orderId, updates) => {
+                      const store = links.find(l => l.id === linkId);
+                      if(store) {
+                        const updatedOrders = (store.orders || []).map(o => o.id === orderId ? { ...o, ...updates } : o);
+                        await ApiService.saveStore({ ...store, orders: updatedOrders });
+                        await refreshData();
+                      }
+                    }}
                   />
                 </div>
               ) : <Navigate to="/register" />
             } />
             <Route path="/s/:slug" element={<PublicLinkView links={links} />} />
             <Route path="/checkout/:slug/:productId" element={<Checkout links={links} onSaleSuccess={async (slug, pid, amt, data) => {
+              const targetStore = links.find(l => l.slug === slug);
+              const targetProduct = targetStore?.products.find(p => p.id === pid);
+              
               await ApiService.createOrder(slug, {
                 productId: pid,
-                productName: data.productName || 'Product',
+                productName: targetProduct?.name || 'Product',
                 amount: amt,
-                currency: data.currency || Currency.IRR,
+                currency: targetProduct?.currency || Currency.IRR,
                 customerEmail: data.email,
                 customerPhone: data.phone,
                 customerAddress: data.address,
                 customerPostalCode: data.postalCode,
-                transactionHash: data.transactionHash
+                transactionHash: data.transactionHash,
+                source: data.source
               });
               await refreshData();
             }} />} />

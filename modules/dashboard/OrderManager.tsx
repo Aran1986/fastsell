@@ -32,7 +32,7 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
       <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h3 className="text-2xl font-black">مدیریت سفارشات</h3>
-          <p className="text-xs text-slate-400 font-bold mt-1">پیگیری فروش و واریزی‌های مشتریان</p>
+          <p className="text-xs text-slate-400 font-bold mt-1">پیگیری فروش و تحلیل منابع ورودی مشتریان</p>
         </div>
       </div>
 
@@ -42,6 +42,7 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
             <tr>
               <th className="p-6">محصول</th>
               <th className="p-6">مشتری و آدرس</th>
+              <th className="p-6">منبع فروش</th>
               <th className="p-6">مبلغ و درگاه</th>
               <th className="p-6">تایید واریز (TXID)</th>
               <th className="p-6">وضعیت</th>
@@ -50,7 +51,7 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
             {sortedOrders.length === 0 ? (
-              <tr><td colSpan={6} className="p-20 text-center text-slate-300 font-bold italic">سفارشی ثبت نشده است.</td></tr>
+              <tr><td colSpan={7} className="p-20 text-center text-slate-300 font-bold italic">سفارشی ثبت نشده است.</td></tr>
             ) : sortedOrders.map(o => (
               <tr key={o.id} className="hover:bg-slate-50/80 transition-all">
                 <td className="p-6 font-black text-slate-800">{o.productName}</td>
@@ -58,6 +59,17 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
                   <div className="font-bold text-slate-700">{o.customerEmail}</div>
                   <div className="text-[10px] text-slate-400 mt-1">{o.customerPhone}</div>
                   <div className="text-[9px] text-indigo-400 mt-1 truncate max-w-[150px]">{o.customerAddress}</div>
+                </td>
+                <td className="p-6">
+                  {o.source === 'marketplace' ? (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black">
+                      <span>🛒</span> ویترین عمومی
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black">
+                      <span>🔗</span> لینک مستقیم
+                    </div>
+                  )}
                 </td>
                 <td className="p-6">
                    <div className="font-black text-indigo-600">
@@ -71,11 +83,7 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
                    {o.currency === Currency.CRYPTO && o.transactionHash ? (
                       <div className="space-y-1">
                         <div className="font-mono text-[9px] text-slate-500 bg-slate-100 p-2 rounded-lg break-all select-all">{o.transactionHash}</div>
-                        <a 
-                          href={getExplorerLink(o.transactionHash, activeLink.bankDetails?.network)} 
-                          target="_blank" rel="noreferrer" 
-                          className="text-[9px] font-black text-indigo-600 hover:underline flex items-center gap-1"
-                        >
+                        <a href={getExplorerLink(o.transactionHash, activeLink.bankDetails?.network)} target="_blank" rel="noreferrer" className="text-[9px] font-black text-indigo-600 hover:underline flex items-center gap-1">
                           بررسی در بلاک‌چین <span dir="ltr">→</span>
                         </a>
                       </div>

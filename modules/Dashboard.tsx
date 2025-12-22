@@ -4,6 +4,7 @@ import { SalesLink, Product, Currency, BankDetails, Order, AppUser } from '../ty
 import PublicLinkView from './PublicLinkView';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
+import { FinanceService } from '../services/financeService';
 
 // Modular Sub-components
 import ProductManager from './dashboard/ProductManager';
@@ -12,6 +13,8 @@ import LinkManager from './dashboard/LinkManager';
 import ProfileManager from './dashboard/ProfileManager';
 import PaymentSettings from './dashboard/PaymentSettings';
 import AppearanceSettings from './dashboard/AppearanceSettings';
+import AffiliatePanel from './dashboard/AffiliatePanel';
+import FinanceHub from './dashboard/FinanceHub';
 
 interface DashboardProps {
   links: SalesLink[];
@@ -30,7 +33,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [activeLinkId, setActiveLinkId] = useState<string | null>(links[links.length - 1]?.id || null);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance'>('products');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const getBaseUrl = () => window.location.href.split('#')[0] + '#';
@@ -55,9 +58,9 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900">
-            {activeTab === 'purchases' ? '🛍️ تاریخچه خریدهای من' : activeLink?.title || 'مدیریت فروشگاه'}
+            {activeTab === 'purchases' ? '🛍️ تاریخچه خریدهای من' : activeTab === 'affiliate' ? '🤝 سیستم کسب درآمد (Affiliate)' : activeTab === 'finance' ? '💎 مدیریت مالی و سود' : activeLink?.title || 'مدیریت فروشگاه'}
           </h1>
-          {activeTab !== 'purchases' && activeLink && (
+          {activeTab !== 'purchases' && activeTab !== 'affiliate' && activeTab !== 'finance' && activeLink && (
             <div className="flex items-center gap-2 mt-2" dir="ltr">
               <span className="text-[10px] font-mono text-indigo-400 opacity-70 truncate max-w-[200px]">.../s/{activeLink.slug}</span>
               <button onClick={() => handleCopy(`${getBaseUrl()}/s/${activeLink.slug}`, 'لینک کپی شد!')} className="text-[10px] bg-slate-100 px-3 py-1.5 rounded-xl font-black hover:bg-slate-200 ml-2">کپی لینک</button>
@@ -66,36 +69,40 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
         </div>
         <div className="flex gap-3">
           <button onClick={() => navigate('/register')} className="bg-green-50 text-green-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-green-100 transition-all">+ ساخت فروشگاه جدید</button>
-          {activeLink && <button onClick={() => setIsPreviewOpen(true)} className="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-slate-200">پیش‌نمایش زنده</button>}
+          {activeLink && activeTab !== 'affiliate' && <button onClick={() => setIsPreviewOpen(true)} className="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-slate-200">پیش‌نمایش زنده</button>}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-white p-5 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-2">
-            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">فروشگاه‌های شما</h2>
-            <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                {links.length === 0 ? <p className="p-4 text-xs font-bold text-slate-300">هنوز فروشگاهی ندارید.</p> : links.map(l => (
-                  <button key={l.id} onClick={() => { setActiveLinkId(l.id); if(activeTab === 'purchases') setActiveTab('products'); }} className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeLinkId === l.id && activeTab !== 'purchases' ? 'bg-indigo-50 text-indigo-600 font-black border border-indigo-100' : 'hover:bg-slate-50 text-slate-500 font-bold'}`}>
-                    <span className="truncate">{l.title}</span>
-                    {activeLinkId === l.id && activeTab !== 'purchases' && <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>}
-                  </button>
-                ))}
-            </div>
-            
-            <div className="h-px bg-slate-100 my-4 mx-4"></div>
-            
-            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">بخش خریدار</h2>
+            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">بخش عمومی و درآمدی</h2>
             <button onClick={() => setActiveTab('purchases')} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === 'purchases' ? 'bg-green-600 text-white shadow-xl shadow-green-100' : 'hover:bg-slate-50 text-slate-600'}`}>
               <span className="text-xl">🛍️</span>
               <span>خرید‌های من ({myPurchases.length})</span>
             </button>
+            <button onClick={() => setActiveTab('affiliate')} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === 'affiliate' ? 'bg-orange-500 text-white shadow-xl shadow-orange-100' : 'hover:bg-slate-50 text-slate-600'}`}>
+              <span className="text-xl">🤝</span>
+              <span>زیرمجموعه‌گیری</span>
+            </button>
 
+            <div className="h-px bg-slate-100 my-4 mx-4"></div>
+            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">فروشگاه‌های شما</h2>
+            <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                {links.length === 0 ? <p className="p-4 text-xs font-bold text-slate-300">هنوز فروشگاهی ندارید.</p> : links.map(l => (
+                  <button key={l.id} onClick={() => { setActiveLinkId(l.id); if(['purchases', 'affiliate'].includes(activeTab)) setActiveTab('products'); }} className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeLinkId === l.id && !['purchases', 'affiliate', 'finance'].includes(activeTab) ? 'bg-indigo-50 text-indigo-600 font-black border border-indigo-100' : 'hover:bg-slate-50 text-slate-500 font-bold'}`}>
+                    <span className="truncate">{l.title}</span>
+                    {activeLinkId === l.id && !['purchases', 'affiliate', 'finance'].includes(activeTab) && <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>}
+                  </button>
+                ))}
+            </div>
+            
             {activeLink && (
               <>
                 <div className="h-px bg-slate-100 my-4 mx-4"></div>
                 <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">تنظیمات فروشگاه فعال</h2>
                 {[
+                  { id: 'finance', label: 'مدیریت مالی', icon: '💎' },
                   { id: 'products', label: t('products'), icon: '📦' },
                   { id: 'orders', label: t('orders'), icon: '📝' },
                   { id: 'manage-links', label: 'لینک‌های مستقیم', icon: '🔗' },
@@ -133,6 +140,15 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 ))}
               </div>
             </div>
+          ) : activeTab === 'affiliate' ? (
+            <AffiliatePanel currentUser={currentUser} allStores={allLinksForPurchases} />
+          ) : activeTab === 'finance' && activeLink ? (
+             <FinanceHub 
+               activeLink={activeLink} 
+               allUsers={[]} // In a real app, this would be fetched
+               allStores={allLinksForPurchases}
+               currentUser={currentUser}
+             />
           ) : activeLink ? (
             <>
               {activeTab === 'products' && <ProductManager activeLink={activeLink} onAddProduct={props.onAddProduct} onDeleteProduct={props.onDeleteProduct} />}
@@ -147,7 +163,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       </div>
       {isPreviewOpen && activeLink && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[600] flex items-center justify-center p-4">
-          <div className="relative w-full max-w-sm h-full max-h-[850px] bg-slate-800 rounded-[3.5rem] border-[12px] border-slate-700 overflow-hidden shadow-2xl">
+          <div className="relative w-full max-sm h-full max-h-[850px] bg-slate-800 rounded-[3.5rem] border-[12px] border-slate-700 overflow-hidden shadow-2xl">
             <div className="flex-1 bg-white h-full overflow-y-auto"><PublicLinkView links={[activeLink]} /></div>
             <button onClick={() => setIsPreviewOpen(false)} className="absolute top-6 right-6 bg-black/60 text-white w-12 h-12 rounded-full text-3xl flex items-center justify-center font-black z-[700]">×</button>
           </div>

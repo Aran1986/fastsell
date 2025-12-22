@@ -7,7 +7,7 @@ import Header from '../components/Header';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { t, dir } = useLanguage();
+  const { t } = useLanguage();
 
   return (
     <div className="bg-white overflow-x-hidden">
@@ -46,47 +46,67 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Visual Showcase - Quick Preview */}
+      {/* Visual Showcase - Interactive Mockup Section */}
       <section className="py-24 bg-slate-50 border-y border-slate-100 overflow-hidden">
          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="order-last lg:order-first">
                 <div className="relative mx-auto w-full max-w-sm">
-                   {/* Mobile Mockup */}
-                   <div className="bg-slate-900 rounded-[4rem] p-4 border-[12px] border-slate-800 shadow-2xl transform rotate-3">
-                      <div className="bg-white rounded-[3rem] h-[600px] overflow-hidden">
-                        <div className="p-8 text-center">
-                            <div className="w-20 h-20 rounded-3xl bg-indigo-600 mx-auto mb-4 flex items-center justify-center text-white text-3xl font-black">L</div>
-                            <div className="h-4 w-32 bg-slate-100 rounded-full mx-auto mb-8"></div>
-                            <div className="space-y-4">
-                                <div className="h-24 bg-slate-50 rounded-3xl border border-slate-100"></div>
-                                <div className="h-24 bg-slate-50 rounded-3xl border border-slate-100"></div>
-                            </div>
+                   {/* Mobile Mockup Frame */}
+                   <div className="bg-slate-900 rounded-[4rem] p-4 border-[12px] border-slate-800 shadow-2xl transform rotate-3 relative overflow-hidden h-[750px]">
+                      <div className="bg-white rounded-[3rem] h-full overflow-hidden flex flex-col">
+                        <div className="bg-slate-50 h-32 flex flex-col items-center justify-center border-b border-slate-100">
+                           <div className="w-16 h-16 bg-indigo-600 rounded-2xl mb-2 flex items-center justify-center text-white font-black text-xl">M</div>
+                           <div className="h-2 w-20 bg-slate-200 rounded-full"></div>
+                        </div>
+                        <div className="p-6 flex-1 space-y-6">
+                           <div className="bg-slate-50 rounded-[2.5rem] p-4 border border-slate-100 animate-pulse">
+                              <div className="h-40 bg-slate-200 rounded-[2rem] mb-4"></div>
+                              <div className="h-4 w-3/4 bg-slate-200 rounded-full mb-2"></div>
+                              <div className="h-4 w-1/2 bg-slate-200 rounded-full"></div>
+                           </div>
+                           <div className="bg-slate-50 rounded-[2.5rem] p-4 border border-slate-100">
+                              <div className="h-40 bg-slate-200 rounded-[2rem] mb-4"></div>
+                              <div className="h-4 w-3/4 bg-slate-200 rounded-full mb-2"></div>
+                           </div>
                         </div>
                       </div>
-                   </div>
-                   <div className="absolute -bottom-10 -right-10 bg-white p-8 rounded-[3rem] shadow-2xl border border-slate-100 hidden sm:block animate-bounce">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">✓</div>
-                        <div className="font-black text-slate-800">سفارش جدید ثبت شد!</div>
+                      {/* Interactive Floaties */}
+                      <div className="absolute top-1/2 -right-16 bg-white p-6 rounded-[2.5rem] shadow-2xl border border-slate-100 animate-bounce delay-700 hidden sm:block">
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-black">✓</div>
+                           <div className="font-black text-slate-800 text-sm">سفارش تایید شد</div>
+                        </div>
+                      </div>
+                      <div className="absolute bottom-20 -left-20 bg-indigo-600 p-6 rounded-[2.5rem] shadow-2xl text-white hidden sm:block animate-pulse">
+                        <div className="font-black text-sm">سود موسس: ۱۲٪ 🔥</div>
                       </div>
                    </div>
                 </div>
             </div>
             <div className="text-right">
-                <h2 className="text-5xl font-black mb-8 leading-tight">پریویو زنده و حرفه‌ای <br/> مخصوص شبکه‌های اجتماعی</h2>
+                <h2 className="text-5xl font-black mb-8 leading-tight">پریویو زنده و حرفه‌ای <br/> مخصوص فروش در اینستاگرام</h2>
                 <p className="text-xl text-slate-500 font-bold leading-relaxed mb-12">مشتریان شما با یک کلیک وارد ویترین اختصاصی‌تان می‌شوند. همه چیز برای موبایل بهینه شده تا بالاترین نرخ تبدیل را تجربه کنید.</p>
                 <div className="flex flex-col gap-6">
-                   <div className="flex items-center gap-4 justify-end">
-                      <span className="font-black text-slate-800">طراحی ریسپانسیو و مدرن</span>
-                      <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">1</div>
+                   <div className="flex items-center gap-4 justify-end p-6 bg-white rounded-[2rem] shadow-sm border border-slate-100 transition-all hover:shadow-xl">
+                      <div className="text-right flex-1">
+                        <div className="font-black text-slate-900 text-lg">طراحی مدرن و مینیمال</div>
+                        <p className="text-xs font-bold text-slate-400 mt-1">مطابق با استانداردهای ۲۰۲۵ طراحی وب</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xl shadow-inner">1</div>
                    </div>
-                   <div className="flex items-center gap-4 justify-end">
-                      <span className="font-black text-slate-800">فرآیند خرید ۲ مرحله‌ای</span>
-                      <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">2</div>
+                   <div className="flex items-center gap-4 justify-end p-6 bg-white rounded-[2rem] shadow-sm border border-slate-100 transition-all hover:shadow-xl">
+                      <div className="text-right flex-1">
+                        <div className="font-black text-slate-900 text-lg">پرداخت ۲ مرحله‌ای فوق سریع</div>
+                        <p className="text-xs font-bold text-slate-400 mt-1">کاهش انصراف مشتری در سبد خرید</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xl shadow-inner">2</div>
                    </div>
-                   <div className="flex items-center gap-4 justify-end">
-                      <span className="font-black text-slate-800">سیستم تسویه خودکار</span>
-                      <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">3</div>
+                   <div className="flex items-center gap-4 justify-end p-6 bg-white rounded-[2rem] shadow-sm border border-slate-100 transition-all hover:shadow-xl">
+                      <div className="text-right flex-1">
+                        <div className="font-black text-slate-900 text-lg">اتصال هوشمند به بلاک‌چین</div>
+                        <p className="text-xs font-bold text-slate-400 mt-1">تایید خودکار واریزی‌های تتر (USDT)</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xl shadow-inner">3</div>
                    </div>
                 </div>
             </div>
@@ -102,7 +122,6 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-20 items-start text-right">
-            {/* Step 1 */}
             <div className="space-y-8 group">
               <div className="bg-indigo-600 w-24 h-24 rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-xl group-hover:scale-110 transition-transform">1</div>
               <h3 className="text-3xl font-black">{t('step1Title')}</h3>
@@ -112,7 +131,6 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Step 2 */}
             <div className="space-y-8 group">
               <div className="bg-indigo-600 w-24 h-24 rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-xl group-hover:scale-110 transition-transform">2</div>
               <h3 className="text-3xl font-black">{t('step2Title')}</h3>
@@ -128,7 +146,6 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Step 3 */}
             <div className="space-y-8 group">
               <div className="bg-indigo-600 w-24 h-24 rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-xl group-hover:scale-110 transition-transform">3</div>
               <h3 className="text-3xl font-black">{t('step3Title')}</h3>

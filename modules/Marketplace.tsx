@@ -41,22 +41,18 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         <div className="flex flex-col lg:flex-row gap-8">
-           {/* Sidebar Filters */}
            <aside className="lg:w-64 space-y-8">
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
                  <h3 className="text-sm font-black text-slate-900 mb-6 border-b border-slate-50 pb-4">فیلترهای هوشمند</h3>
-                 
                  <div className="space-y-6">
                     <div>
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">جستجو</label>
                        <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="نام کالا یا برند..." className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold outline-none" />
                     </div>
-                    
                     <div>
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">حداکثر قیمت</label>
                        <input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value ? Number(e.target.value) : '')} placeholder="مبلغ..." className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold outline-none" />
                     </div>
-
                     <div>
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">دسته‌بندی‌ها</label>
                        <div className="flex flex-col gap-2">
@@ -71,13 +67,13 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
               </div>
            </aside>
 
-           {/* Content Grid */}
            <div className="flex-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                 {filteredProducts.length === 0 ? (
                   <div className="col-span-full py-32 text-center bg-white rounded-[3.5rem] border-2 border-dashed border-slate-100 text-slate-300 font-black italic">هیچ محصولی با این فیلترها پیدا نشد.</div>
                 ) : filteredProducts.map(p => (
-                  <Link to={`/checkout/${p.storeSlug}/${p.id}`} key={`${p.storeSlug}-${p.id}`} className="group bg-white rounded-[3rem] overflow-hidden border border-slate-100 hover:shadow-2xl transition-all duration-500 flex flex-col">
+                  /* افزودن پارامتر ref=marketplace برای ردیابی منبع فروش */
+                  <Link to={`/checkout/${p.storeSlug}/${p.id}?ref=marketplace`} key={`${p.storeSlug}-${p.id}`} className="group bg-white rounded-[3rem] overflow-hidden border border-slate-100 hover:shadow-2xl transition-all duration-500 flex flex-col">
                     <div className="h-56 overflow-hidden relative">
                        <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={p.name} />
                        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black shadow-sm" style={{ color: p.storeColor }}>{p.storeName}</div>

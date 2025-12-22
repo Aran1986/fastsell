@@ -26,11 +26,14 @@ const Header: React.FC<HeaderProps> = ({ onLogout, user }) => {
           <Logo className="text-indigo-600 drop-shadow-sm" size={28} />
           <span className="text-2xl tracking-tighter flex items-center">
             <span className="font-black text-slate-900">{t('fast')}</span>
-            <span className="logo-t font-black text-indigo-500">{t('t')}</span>
+            <span className="logo-t font-black text-indigo-50">{t('t')}</span>
             <span className="font-black text-slate-900">{t('sell')}</span>
           </span>
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
+          <Link to="/transparency" className="text-[10px] font-black text-indigo-500 hover:text-indigo-700 transition-colors hidden sm:block">
+            شفافیت مالی 💎
+          </Link>
           <Link to="/marketplace" className="text-xs font-black text-slate-700 hover:text-indigo-600 transition-colors hidden md:block">
             ویترین عمومی ✨
           </Link>
