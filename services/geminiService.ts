@@ -9,17 +9,16 @@ export const generateProductDescription = async (productName: string): Promise<s
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Write a persuasive, short, and catchy sales description for a product named "${productName}". Keep it under 2 sentences.`,
+      contents: `شما یک کپی‌رایتر حرفه‌ای فروشگاه‌های اینترنتی هستید. یک متن کوتاه، متقاعدکننده و جذاب برای محصولی به نام "${productName}" بنویسید. متن باید حداکثر ۲ جمله باشد و خریدار را ترغیب به خرید کند. فقط متن فارسی برگردانید.`,
       config: {
-        temperature: 0.7,
+        temperature: 0.8,
         topP: 0.9,
       },
     });
-    // response.text is a getter property that returns the string output.
-    return response.text || "No description generated.";
+    return response.text?.trim() || "محصولی با کیفیت عالی که قطعا عاشقش خواهید شد!";
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Amazing product that you will love!";
+    return "یک انتخاب فوق‌العاده برای شما!";
   }
 };
 
