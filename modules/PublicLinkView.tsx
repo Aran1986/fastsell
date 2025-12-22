@@ -11,7 +11,7 @@ const getCurrencySymbol = (curr: Currency) => {
   switch (curr) {
     case Currency.USD: return '$';
     case Currency.EUR: return '€';
-    case Currency.IRR: return 'تومان'; // Improved label
+    case Currency.IRR: return 'تومان';
     case Currency.CRYPTO: return 'USDT';
     default: return '$';
   }
@@ -44,8 +44,11 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white text-center min-h-screen">
         <h1 className="text-8xl font-black text-slate-100 mb-6 select-none">404</h1>
-        <p className="text-slate-600 text-xl font-bold mb-8">فروشگاه مورد نظر پیدا نشد.</p>
-        <Link to="/" className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl">ساخت فروشگاه شخصی ←</Link>
+        <p className="text-slate-600 text-xl font-bold mb-4">فروشگاه مورد نظر پیدا نشد.</p>
+        <div className="bg-amber-50 text-amber-700 p-6 rounded-3xl border border-amber-100 text-sm font-bold mb-8 max-w-md">
+           💡 نکته: چون این نسخه دمو از دیتابیس محلی (LocalStorage) استفاده می‌کند، مغازه‌هایی که روی یک دستگاه ساخته شده‌اند، روی دستگاه دیگر نمایش داده نمی‌شوند مگر اینکه از محصولات نمونه (Mock Data) باشند.
+        </div>
+        <Link to="/register" className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl">ساخت فروشگاه در این دستگاه ←</Link>
       </div>
     );
   }
@@ -59,7 +62,6 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col items-center relative overflow-x-hidden" dir="rtl">
-      
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-96 opacity-10 pointer-events-none" style={{ background: `linear-gradient(180deg, ${mainColor} 0%, transparent 100%)` }}></div>
 

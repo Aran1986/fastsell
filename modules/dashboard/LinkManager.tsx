@@ -11,9 +11,10 @@ const LinkManager: React.FC<LinkManagerProps> = ({ activeLink }) => {
     navigator.clipboard.writeText(text).then(() => alert('لینک مستقیم با موفقیت کپی شد!'));
   };
 
-  // دریافت بیس آدرس اپلیکیشن به صورت داینامیک و دقیق
   const getBaseUrl = () => {
-    return window.location.href.split('#')[0] + '#';
+    // Ensuring the base URL ends with /#/ for HashRouter consistency
+    const loc = window.location;
+    return `${loc.protocol}//${loc.host}/#`;
   };
 
   return (
