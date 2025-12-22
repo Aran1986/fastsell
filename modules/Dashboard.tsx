@@ -44,11 +44,11 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const myPurchases = useMemo(() => {
     const orders: Order[] = [];
     allLinksForPurchases.forEach(l => {
-      const filtered = (l.orders || []).filter(o => o.customerEmail === currentUser.email);
+      const filtered = (l.orders || []).filter(o => o.customerEmail === currentUser.identifier);
       orders.push(...filtered);
     });
     return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [allLinksForPurchases, currentUser.email]);
+  }, [allLinksForPurchases, currentUser.identifier]);
 
   const activeLink = links.find(l => l.id === activeLinkId);
 
@@ -143,7 +143,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
         <div className="lg:col-span-3">
           {activeTab === 'purchases' ? (
             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm animate-in fade-in">
-              <h3 className="text-xl font-black mb-8">تاریخچه خریدهای شما ({currentUser.email})</h3>
+              <h3 className="text-xl font-black mb-8">تاریخچه خریدهای شما ({currentUser.identifier})</h3>
               <div className="space-y-4">
                 {myPurchases.length === 0 ? <div className="text-center py-20 text-slate-300 font-bold italic">هنوز خریدی ثبت نکرده‌اید.</div> : myPurchases.map(order => (
                   <div key={order.id} className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-[2rem] border border-slate-100 hover:bg-slate-50 transition-all">

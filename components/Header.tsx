@@ -42,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, user }) => {
 
           {user && (
             <div className="hidden lg:flex flex-col items-end">
-              <span className="text-[9px] font-black text-slate-400 uppercase">{user.email}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase">{user.identifier}</span>
               <button onClick={onLogout} className="text-[9px] font-black text-red-400 hover:text-red-600">خروج</button>
             </div>
           )}
