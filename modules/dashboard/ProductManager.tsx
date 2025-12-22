@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import Cropper from 'react-easy-crop';
+import Cropper, { Area } from 'react-easy-crop';
 import { SalesLink, Product, Currency, Order } from '../../types';
 import { generateProductDescription } from '../../services/geminiService';
 import { FinanceService } from '../../services/financeService';
@@ -30,7 +30,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ activeLink, onAddProduc
   const [croppedImg, setCroppedImg] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [pixels, setPixels] = useState(null);
+  const [pixels, setPixels] = useState<Area | null>(null);
 
   const getBaseUrl = () => window.location.href.split('#')[0] + '#';
 
