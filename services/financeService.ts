@@ -35,10 +35,12 @@ export const FinanceService = {
     const salesPoints = (store.totalSales / 1000000) * BUSINESS_RULES.SCORE_PER_MILLION_SALES;
 
     // C. Growth Contribution Score
-    const owner = allUsers.find(u => u.email === store.ownerEmail);
+    // Fix: Using 'identifier' property instead of 'email' to match AppUser interface definition
+    const owner = allUsers.find(u => u.identifier === store.ownerEmail);
     const referredSellers = allUsers.filter(u => u.referredBy === owner?.referralCode);
     const activeReferralPoints = referredSellers.reduce((acc, refUser) => {
-      const refStore = allStores.find(s => s.ownerEmail === refUser.email);
+      // Fix: Using 'identifier' property instead of 'email' to match AppUser interface definition
+      const refStore = allStores.find(s => s.ownerEmail === refUser.identifier);
       if (refStore && this.isSellerActive(refStore)) {
         return acc + BUSINESS_RULES.SCORE_PER_ACTIVE_REFERRAL;
       }

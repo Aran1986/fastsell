@@ -18,6 +18,11 @@ export interface BankDetails {
   notes?: string;
 }
 
+export interface ProductVariant {
+  name: string; // e.g., "Color"
+  options: string[]; // e.g., ["Red", "Blue", "Green"]
+}
+
 export interface Order {
   id: string;
   productId: string;
@@ -26,20 +31,23 @@ export interface Order {
   storeName?: string;
   storeSlug?: string;
   amount: number;
+  shippingFee: number; // Added shipping fee to order record
+  totalPaid: number; // Final amount paid
   currency: Currency;
   customerEmail: string;
   customerPhone: string;
   customerAddress: string;
   customerPostalCode: string;
+  selectedVariants?: Record<string, string>; // e.g., {"Color": "Red"}
   trackingNumber?: string;
   transactionHash?: string;
   orderNote?: string;
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
   date: string;
   source: 'direct' | 'marketplace';
-  systemFee: number; // مبلغ کسر شده توسط سیستم
-  affiliateReward: number; // مبلغی که به معرف می‌رسد
-  sellerNet: number; // مبلغ خالص دریافتی فروشنده
+  systemFee: number;
+  affiliateReward: number;
+  sellerNet: number;
 }
 
 export interface Product {
@@ -52,6 +60,8 @@ export interface Product {
   image?: string;
   category: string;
   salesCount: number;
+  stock: number;
+  variants?: ProductVariant[]; // Added variants support
   isFeatured?: boolean;
 }
 
@@ -66,15 +76,18 @@ export interface SalesLink {
   themeColor: string;
   buyButtonColor?: string;
   totalSales: number;
+  shippingFee: number; // Fixed shipping fee for the store
   defaultCurrency: Currency;
   categories: string[];
   bankDetails?: BankDetails;
 }
 
 export interface AppUser {
-  email: string;
-  name?: string;
+  id: string;
+  identifier: string; // email or phone
+  password?: string;
+  authType: 'email' | 'phone';
   registeredAt: string;
-  referralCode: string; // کد دعوت اختصاصی کاربر
-  referredBy?: string; // کد دعوت کسی که این کاربر را معرفی کرده
+  referralCode: string;
+  referredBy?: string;
 }

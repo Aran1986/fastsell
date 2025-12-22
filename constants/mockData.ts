@@ -11,6 +11,7 @@ export const INITIAL_STORES: SalesLink[] = [
     themeColor: '#4f46e5',
     buyButtonColor: '#4338ca',
     totalSales: 4500000,
+    shippingFee: 0,
     defaultCurrency: Currency.IRR,
     categories: ['موبایل', 'لوازم جانبی', 'گیمینگ'],
     products: [
@@ -23,6 +24,7 @@ export const INITIAL_STORES: SalesLink[] = [
         image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
         category: 'موبایل',
         salesCount: 12,
+        stock: 5,
         isFeatured: true
       },
       {
@@ -33,7 +35,8 @@ export const INITIAL_STORES: SalesLink[] = [
         currency: Currency.IRR,
         image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80',
         category: 'لوازم جانبی',
-        salesCount: 5
+        salesCount: 5,
+        stock: 0
       }
     ],
     orders: []
@@ -47,6 +50,7 @@ export const INITIAL_STORES: SalesLink[] = [
     themeColor: '#db2777',
     buyButtonColor: '#be185d',
     totalSales: 150,
+    shippingFee: 0,
     defaultCurrency: Currency.CRYPTO,
     categories: ['تابلو', 'دیجیتال آرت'],
     products: [
@@ -59,6 +63,7 @@ export const INITIAL_STORES: SalesLink[] = [
         image: 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=600&q=80',
         category: 'دیجیتال آرت',
         salesCount: 3,
+        stock: 99,
         isFeatured: true
       }
     ],

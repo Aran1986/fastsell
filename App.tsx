@@ -35,23 +35,23 @@ const App: React.FC = () => {
     setLinks(all);
   };
 
-  const handleLogin = async (email: string, referredBy?: string) => {
-    const user = await ApiService.login(email, referredBy);
+  const handleLogin = (user: AppUser) => {
     setCurrentUser(user);
-    await refreshData();
+    refreshData();
   };
 
   const createLink = async (linkData: { title: string; slug: string }) => {
     if (!currentUser) return;
     const newLink: SalesLink = {
       id: Math.random().toString(36).substr(2, 9),
-      ownerEmail: currentUser.email,
+      ownerEmail: currentUser.identifier,
       slug: linkData.slug,
       title: linkData.title,
       bio: 'به فروشگاه جدید من خوش آمدید!',
       themeColor: '#6366f1',
       buyButtonColor: '#6366f1',
       totalSales: 0,
+      shippingFee: 0,
       products: [],
       orders: [],
       defaultCurrency: Currency.IRR,
@@ -62,7 +62,7 @@ const App: React.FC = () => {
     await refreshData();
   };
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50">...</div>;
 
   return (
     <LanguageProvider>
@@ -78,7 +78,7 @@ const App: React.FC = () => {
                 <div className="flex flex-col flex-1">
                   <Header onLogout={() => { ApiService.logout(); setCurrentUser(null); }} user={currentUser} />
                   <Dashboard 
-                    links={links.filter(l => l.ownerEmail === currentUser.email)} 
+                    links={links.filter(l => l.ownerEmail === currentUser.identifier)} 
                     allLinksForPurchases={links}
                     currentUser={currentUser}
                     onAddProduct={async (id, p) => {
@@ -123,18 +123,18 @@ const App: React.FC = () => {
             } />
             <Route path="/s/:slug" element={<PublicLinkView links={links} />} />
             <Route path="/checkout/:slug/:productId" element={<Checkout links={links} onSaleSuccess={async (slug, pid, amt, data) => {
-              const targetStore = links.find(l => l.slug === slug);
-              const targetProduct = targetStore?.products.find(p => p.id === pid);
-              
               await ApiService.createOrder(slug, {
                 productId: pid,
-                productName: targetProduct?.name || 'Product',
+                productName: links.find(l => l.slug === slug)?.products.find(p => p.id === pid)?.name || 'Product',
                 amount: amt,
-                currency: targetProduct?.currency || Currency.IRR,
+                shippingFee: data.shippingFee,
+                totalPaid: data.totalPaid,
+                currency: Currency.IRR,
                 customerEmail: data.email,
                 customerPhone: data.phone,
                 customerAddress: data.address,
                 customerPostalCode: data.postalCode,
+                selectedVariants: data.selectedVariants,
                 transactionHash: data.transactionHash,
                 source: data.source
               });

@@ -3,14 +3,13 @@ import { SalesLink, Product, Order, Currency, BankDetails, AppUser } from '../ty
 import { FinanceService } from './financeService';
 import { INITIAL_STORES } from '../constants/mockData';
 
-const STORES_KEY = 'fastsell_stores_v2';
-const USERS_KEY = 'fastsell_users_v2';
-const SESSION_KEY = 'fastsell_current_user';
+const STORES_KEY = 'fastsell_stores_v3';
+const USERS_KEY = 'fastsell_users_v3';
+const SESSION_KEY = 'fastsell_current_user_v3';
 
 const networkDelay = () => new Promise(resolve => setTimeout(resolve, 500));
 
 export const ApiService = {
-  // Initialize storage with mock data if it's the first visit
   _init() {
     if (!localStorage.getItem(STORES_KEY)) {
       localStorage.setItem(STORES_KEY, JSON.stringify(INITIAL_STORES));
@@ -22,22 +21,40 @@ export const ApiService = {
     return data ? JSON.parse(data) : null;
   },
 
-  async login(email: string, referredBy?: string): Promise<AppUser> {
+  async register(data: { identifier: string, password?: string, authType: 'email' | 'phone', referredBy?: string }): Promise<AppUser> {
     await networkDelay();
     const usersRaw = localStorage.getItem(USERS_KEY);
     let users: AppUser[] = usersRaw ? JSON.parse(usersRaw) : [];
-    let user = users.find(u => u.email === email);
-
-    if (!user) {
-      user = { 
-        email, 
-        registeredAt: new Date().toISOString(),
-        referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(),
-        referredBy: referredBy || undefined
-      };
-      users.push(user);
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    
+    if (users.find(u => u.identifier === data.identifier)) {
+      throw new Error("این کاربر قبلاً ثبت‌نام کرده است.");
     }
+
+    const user: AppUser = {
+      id: Math.random().toString(36).substr(2, 9),
+      identifier: data.identifier,
+      password: data.password,
+      authType: data.authType,
+      registeredAt: new Date().toISOString(),
+      referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(),
+      referredBy: data.referredBy
+    };
+
+    users.push(user);
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    return user;
+  },
+
+  async login(identifier: string, password?: string): Promise<AppUser> {
+    await networkDelay();
+    const usersRaw = localStorage.getItem(USERS_KEY);
+    let users: AppUser[] = usersRaw ? JSON.parse(usersRaw) : [];
+    const user = users.find(u => u.identifier === identifier);
+
+    if (!user) throw new Error("کاربری با این مشخصات یافت نشد.");
+    if (password && user.password !== password) throw new Error("رمز عبور اشتباه است.");
+
     localStorage.setItem(SESSION_KEY, JSON.stringify(user));
     return user;
   },
@@ -49,58 +66,44 @@ export const ApiService = {
   async getAllStores(): Promise<SalesLink[]> {
     this._init();
     const data = localStorage.getItem(STORES_KEY);
-    const stores: SalesLink[] = data ? JSON.parse(data) : [];
-    
-    const usersRaw = localStorage.getItem(USERS_KEY);
-    const users: AppUser[] = usersRaw ? JSON.parse(usersRaw) : [];
-    
-    return stores.map(s => {
-      const owner = users.find(u => u.email === s.ownerEmail);
-      return { ...s, referredBy: owner?.referredBy };
-    });
+    return data ? JSON.parse(data) : [];
   },
 
   async saveStore(store: SalesLink): Promise<void> {
-    await networkDelay();
     const stores = await this.getAllStores();
     const index = stores.findIndex(s => s.id === store.id);
-    const storeToSave = { ...store };
-    delete (storeToSave as any).referredBy;
-
-    if (index > -1) stores[index] = storeToSave;
-    else stores.push(storeToSave);
+    if (index > -1) stores[index] = store;
+    else stores.push(store);
     localStorage.setItem(STORES_KEY, JSON.stringify(stores));
   },
 
   async createOrder(storeSlug: string, orderData: Omit<Order, 'id' | 'date' | 'status' | 'systemFee' | 'affiliateReward' | 'sellerNet'>): Promise<Order> {
-    await networkDelay();
     const stores = await this.getAllStores();
-    const storeIndex = stores.findIndex(s => s.slug === storeSlug);
-    if (storeIndex === -1) throw new Error("Store not found");
+    const store = stores.find(s => s.slug === storeSlug);
+    if (!store) throw new Error("فروشگاه یافت نشد");
 
-    // خریدار را هم به لیست کاربران سیستم اضافه می‌کنیم (ورک‌فلو ثبت‌نام خودکار)
-    await this.login(orderData.customerEmail);
+    const product = store.products.find(p => p.id === orderData.productId);
+    if (!product) throw new Error("محصول یافت نشد");
+    if (product.stock <= 0) throw new Error("موجودی کالا به اتمام رسیده است.");
+
+    // Decrement stock
+    product.stock -= 1;
+    product.salesCount += 1;
 
     const breakdown = FinanceService.calculateOrderBreakdown(orderData.amount, orderData.source);
 
     const newOrder: Order = {
       ...orderData,
       ...breakdown,
-      id: Math.random().toString(36).substr(2, 9),
+      id: 'ORD-' + Math.random().toString(36).substr(2, 7).toUpperCase(),
       date: new Date().toISOString(),
       status: 'pending'
     };
 
-    stores[storeIndex].orders = [...(stores[storeIndex].orders || []), newOrder];
-    stores[storeIndex].totalSales += newOrder.amount;
+    store.orders = [...(store.orders || []), newOrder];
+    store.totalSales += newOrder.totalPaid;
     
-    const storesToSave = stores.map(s => {
-      const copy = { ...s };
-      delete (copy as any).referredBy;
-      return copy;
-    });
-
-    localStorage.setItem(STORES_KEY, JSON.stringify(storesToSave));
+    localStorage.setItem(STORES_KEY, JSON.stringify(stores));
     return newOrder;
   }
 };

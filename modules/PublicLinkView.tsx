@@ -114,44 +114,55 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
             <div className="text-center py-24 text-slate-300 font-bold bg-white rounded-[3.5rem] border-4 border-dashed border-slate-100">
               هنوز کالا یا خدماتی اضافه نشده است.
             </div>
-        ) : displayProducts.map(product => (
-          <Link 
-            to={`/checkout/${link.slug}/${product.id}`}
-            key={product.id} 
-            className="group block bg-white rounded-[3.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 overflow-hidden"
-          >
-            <div className="flex flex-col sm:flex-row">
-                <div className="sm:w-56 h-56 overflow-hidden relative">
-                    <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={product.name} />
-                    {product.isFeatured && (
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-indigo-600 text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg">ویژه</div>
-                    )}
-                </div>
-                <div className="flex-1 p-8 flex flex-col justify-between">
-                    <div>
-                        <div className="flex items-start justify-between mb-2">
-                           <h3 className="font-black text-slate-900 text-2xl group-hover:text-indigo-600 transition-colors">{product.name}</h3>
-                           <span className="text-[10px] bg-slate-50 px-3 py-1 rounded-full font-black text-slate-400 border border-slate-100">{product.category}</span>
+        ) : displayProducts.map(product => {
+          const isOutOfStock = product.stock <= 0;
+          return (
+            <Link 
+              to={isOutOfStock ? '#' : `/checkout/${link.slug}/${product.id}`}
+              key={product.id} 
+              className={`group block bg-white rounded-[3.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 overflow-hidden ${isOutOfStock ? 'cursor-not-allowed grayscale-[0.5]' : ''}`}
+            >
+              <div className="flex flex-col sm:flex-row relative">
+                  <div className="sm:w-56 h-56 overflow-hidden relative">
+                      <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={product.name} />
+                      {product.isFeatured && !isOutOfStock && (
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-indigo-600 text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg">ویژه</div>
+                      )}
+                      {isOutOfStock && (
+                        <div className="absolute inset-0 bg-red-900/60 flex items-center justify-center">
+                           <span className="text-white font-black text-xl border-2 border-white px-4 py-2 rounded-xl transform -rotate-12">اتمام موجودی</span>
                         </div>
-                        <p className="text-sm text-slate-400 font-bold leading-relaxed line-clamp-2">{product.description}</p>
-                    </div>
-                    
-                    <div className="mt-8 flex items-center justify-between">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">قیمت نهایی</span>
-                            <span className="font-black text-slate-900 text-2xl" style={{ color: mainColor }}>
-                                {product.price.toLocaleString()} 
-                                <span className="text-sm mr-1">{getCurrencySymbol(product.currency)}</span>
-                            </span>
-                        </div>
-                        <div style={{ backgroundColor: buyBtnColor }} className="text-white px-8 py-4 rounded-[1.8rem] text-sm font-black shadow-lg shadow-indigo-100 transform group-hover:translate-x-[-8px] transition-all">
-                            خرید مستقیم
-                        </div>
-                    </div>
-                </div>
-            </div>
-          </Link>
-        ))}
+                      )}
+                  </div>
+                  <div className="flex-1 p-8 flex flex-col justify-between">
+                      <div>
+                          <div className="flex items-start justify-between mb-2">
+                             <h3 className="font-black text-slate-900 text-2xl group-hover:text-indigo-600 transition-colors">{product.name}</h3>
+                             <span className="text-[10px] bg-slate-50 px-3 py-1 rounded-full font-black text-slate-400 border border-slate-100">{product.category}</span>
+                          </div>
+                          <p className="text-sm text-slate-400 font-bold leading-relaxed line-clamp-2">{product.description}</p>
+                      </div>
+                      
+                      <div className="mt-8 flex items-center justify-between">
+                          <div className="flex flex-col">
+                              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">قیمت نهایی</span>
+                              <span className="font-black text-slate-900 text-2xl" style={{ color: mainColor }}>
+                                  {product.price.toLocaleString()} 
+                                  <span className="text-sm mr-1">{getCurrencySymbol(product.currency)}</span>
+                              </span>
+                          </div>
+                          <div 
+                            style={{ backgroundColor: isOutOfStock ? '#cbd5e1' : buyBtnColor }} 
+                            className="text-white px-8 py-4 rounded-[1.8rem] text-sm font-black shadow-lg transform group-hover:translate-x-[-8px] transition-all"
+                          >
+                              {isOutOfStock ? 'ناموجود' : 'خرید مستقیم'}
+                          </div>
+                      </div>
+                  </div>
+              </div>
+            </Link>
+          );
+        })}
       </main>
 
       {/* Sticky Branding Footer */}

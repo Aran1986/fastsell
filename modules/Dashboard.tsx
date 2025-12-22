@@ -36,7 +36,10 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance'>('products');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const getBaseUrl = () => window.location.href.split('#')[0] + '#';
+  const getBaseUrl = () => {
+    const loc = window.location;
+    return `${loc.protocol}//${loc.host}/#`;
+  };
 
   const myPurchases = useMemo(() => {
     const orders: Order[] = [];
@@ -49,12 +52,29 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
   const activeLink = links.find(l => l.id === activeLinkId);
 
+  // Check for out of stock products in active link
+  const outOfStockProducts = useMemo(() => {
+    if (!activeLink) return [];
+    return activeLink.products.filter(p => p.stock <= 0);
+  }, [activeLink]);
+
   const handleCopy = (text: string, msg: string) => {
     navigator.clipboard.writeText(text).then(() => alert(msg));
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+      {/* Inventory Alert Banner */}
+      {outOfStockProducts.length > 0 && activeTab === 'products' && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-3xl flex items-center justify-between animate-in slide-in-from-top-4">
+           <div className="flex items-center gap-3">
+              <span className="text-xl">⚠️</span>
+              <p className="text-red-600 text-sm font-black">تعداد {outOfStockProducts.length} محصول از فروشگاه شما ناموجود شده است. لطفاً انبار را شارژ کنید.</p>
+           </div>
+           <button onClick={() => {}} className="text-[10px] font-black text-red-400 underline">مشاهده لیست</button>
+        </div>
+      )}
+
       <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900">
