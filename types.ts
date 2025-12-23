@@ -19,8 +19,17 @@ export interface BankDetails {
 }
 
 export interface ProductVariant {
-  name: string; // e.g., "Color"
-  options: string[]; // e.g., ["Red", "Blue", "Green"]
+  name: string;
+  options: string[];
+}
+
+export interface AppNotification {
+  id: string;
+  text: string;
+  date: string;
+  isRead: boolean;
+  link?: string;
+  type: 'sale' | 'status_update' | 'system';
 }
 
 export interface Order {
@@ -31,15 +40,17 @@ export interface Order {
   storeName?: string;
   storeSlug?: string;
   amount: number;
-  shippingFee: number; // Added shipping fee to order record
-  totalPaid: number; // Final amount paid
+  discountAmount?: number;
+  shippingFee: number;
+  totalPaid: number;
   currency: Currency;
   customerEmail: string;
   customerPhone: string;
   customerAddress: string;
   customerPostalCode: string;
-  selectedVariants?: Record<string, string>; // e.g., {"Color": "Red"}
+  selectedVariants?: Record<string, string>;
   trackingNumber?: string;
+  shippingMethod: 'post' | 'delivery' | 'digital';
   transactionHash?: string;
   orderNote?: string;
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
@@ -56,13 +67,17 @@ export interface Product {
   description: string;
   detailedDescription?: string;
   price: number;
+  discountPrice?: number;
   currency: Currency;
   image?: string;
   category: string;
   salesCount: number;
   stock: number;
-  variants?: ProductVariant[]; // Added variants support
+  rating: number;
+  reviewCount: number;
+  variants?: ProductVariant[];
   isFeatured?: boolean;
+  shippingMethod?: 'post' | 'delivery' | 'digital';
 }
 
 export interface SalesLink {
@@ -76,7 +91,7 @@ export interface SalesLink {
   themeColor: string;
   buyButtonColor?: string;
   totalSales: number;
-  shippingFee: number; // Fixed shipping fee for the store
+  shippingFee: number;
   defaultCurrency: Currency;
   categories: string[];
   bankDetails?: BankDetails;
@@ -84,10 +99,11 @@ export interface SalesLink {
 
 export interface AppUser {
   id: string;
-  identifier: string; // email or phone
+  identifier: string;
   password?: string;
   authType: 'email' | 'phone';
   registeredAt: string;
   referralCode: string;
   referredBy?: string;
+  notifications?: AppNotification[];
 }

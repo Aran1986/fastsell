@@ -13,6 +13,7 @@ import Register from './modules/Register';
 import Marketplace from './modules/Marketplace';
 import Header from './components/Header';
 import Transparency from './modules/Transparency';
+import Pricing from './modules/Pricing';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -55,7 +56,12 @@ const App: React.FC = () => {
       products: [],
       orders: [],
       defaultCurrency: Currency.IRR,
-      categories: ['عمومی'],
+      categories: [
+        'عمومی', 'موبایل و تبلت', 'لپ‌تاپ و کامپیوتر', 'پوشاک مردانه', 'پوشاک زنانه', 
+        'لوازم خانگی', 'آرایشی و بهداشتی', 'کتاب و لوازم‌التحریر', 'اسباب‌بازی و سرگرمی', 
+        'ورزش و سفر', 'خودرو و ابزار', 'کالاهای سوپرمارکتی', 'صنایع دستی', 'پت‌شاپ', 
+        'خدمات و آموزش', 'ساعت و اکسسوری', 'طلا و جواهر', 'لوازم دکوری'
+      ],
       bankDetails: { walletAddress: '', network: 'TRC20' }
     };
     await ApiService.saveStore(newLink);
@@ -71,6 +77,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/transparency" element={<Transparency />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/marketplace" element={<Marketplace links={links} />} />
             <Route path="/register" element={<Register onLogin={handleLogin} onCreateLink={createLink} existingLinks={links} user={currentUser} />} />
             <Route path="/dashboard" element={
