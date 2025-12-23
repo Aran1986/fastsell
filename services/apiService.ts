@@ -5,7 +5,6 @@ import { INITIAL_STORES } from '../constants/mockData';
 
 const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
-// Local Fallback Storage Key
 const LOCAL_STORES_KEY = 'fastsell_local_stores';
 
 export const ApiService = {
@@ -31,7 +30,7 @@ export const ApiService = {
         notifications: user.notifications || []
       };
     } catch (e) {
-      console.warn("Auth check failed, likely network issue:", e);
+      console.warn("Auth check failed (Connection Issue):", e);
       return null;
     }
   },
@@ -40,22 +39,27 @@ export const ApiService = {
     if (!isSupabaseConfigured) return this.getLocalStores();
 
     try {
+      // Fetching stores with their products using Supabase relation
       const { data: stores, error } = await supabase
         .from('stores')
         .select('*, products(*)');
 
       if (error) {
-        console.error("Supabase API Error:", error.message);
+        console.error("Supabase Fetch Error:", error.message, "| Details:", error.details);
         return this.getLocalStores();
       }
 
       const remoteStores = (stores || []).map(s => this.mapStoreData(s, s.products || []));
-      // Merge with local stores if any exist
+      
+      // Update local storage with fresh data for offline use
+      if (remoteStores.length > 0) {
+        this.saveLocalStores(remoteStores);
+      }
+      
       return remoteStores.length > 0 ? remoteStores : this.getLocalStores();
 
     } catch (e) {
       console.error("Critical Network Error (Failed to Fetch):", e);
-      // If network is down or blocked, return local data
       return this.getLocalStores();
     }
   },
@@ -75,9 +79,9 @@ export const ApiService = {
       ownerEmail: s.owner_email,
       themeColor: s.theme_color,
       buyButtonColor: s.buy_button_color,
-      shippingFee: s.shipping_fee || 0,
+      shippingFee: Number(s.shipping_fee) || 0,
       defaultCurrency: s.default_currency as Currency,
-      totalSales: s.total_sales || 0,
+      totalSales: Number(s.total_sales) || 0,
       bankDetails: s.bank_details || {},
       orders: s.orders || [],
       products: products.map((p: any) => ({
@@ -86,7 +90,8 @@ export const ApiService = {
         salesCount: p.sales_count || 0,
         reviewCount: p.review_count || 0,
         isFeatured: p.is_featured,
-        shippingMethod: p.shipping_method
+        shippingMethod: p.shipping_method,
+        variants: p.variants || []
       }))
     };
   },
@@ -95,7 +100,7 @@ export const ApiService = {
     if (!isSupabaseConfigured) {
       const stores = this.getLocalStores();
       const existingIdx = stores.findIndex(s => s.slug === store.slug);
-      const newId = store.id || Math.random().toString(36).substr(2, 9);
+      const newId = isUUID(store.id) ? store.id : Math.random().toString(36).substr(2, 9);
       const updatedStore = { ...store, id: newId };
       
       if (existingIdx > -1) stores[existingIdx] = updatedStore;
@@ -128,17 +133,19 @@ export const ApiService = {
         .select('id')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Save Store Failed (SQL Error):", error.message);
+        throw error;
+      }
       return data.id;
     } catch (e) {
-      console.error("Save Store Failed:", e);
+      console.error("Save Store Network/Internal Error:", e);
       throw e;
     }
   },
 
   async saveProduct(linkId: string, product: Omit<Product, 'id' | 'salesCount'>): Promise<void> {
     if (!isSupabaseConfigured || !isUUID(linkId)) {
-      // Local logic
       const stores = this.getLocalStores();
       const store = stores.find(s => s.id === linkId || s.slug === linkId);
       if (store) {
@@ -147,7 +154,7 @@ export const ApiService = {
         this.saveLocalStores(stores);
         return;
       }
-      throw new Error("Store not found locally.");
+      throw new Error("Store context lost for local product saving.");
     }
 
     const productData = {
@@ -162,12 +169,16 @@ export const ApiService = {
       stock: product.stock,
       rating: product.rating,
       review_count: product.reviewCount,
+      variants: product.variants || [],
       is_featured: product.isFeatured,
       shipping_method: product.shippingMethod
     };
 
     const { error } = await supabase.from('products').insert(productData);
-    if (error) throw error;
+    if (error) {
+      console.error("Save Product SQL Error:", error.message);
+      throw error;
+    }
   },
 
   async deleteProduct(productId: string): Promise<void> {
@@ -179,14 +190,15 @@ export const ApiService = {
       this.saveLocalStores(stores);
       return;
     }
-    await supabase.from('products').delete().eq('id', productId);
+    const { error } = await supabase.from('products').delete().eq('id', productId);
+    if (error) console.error("Delete Product Error:", error.message);
   },
 
   async createOrder(storeSlug: string, orderData: any): Promise<Order> {
     if (!isSupabaseConfigured) {
       const stores = this.getLocalStores();
       const store = stores.find(s => s.slug === storeSlug);
-      if (!store) throw new Error("Store not found");
+      if (!store) throw new Error("Store not found for local order.");
       
       const newOrder: Order = {
         ...orderData,
@@ -201,8 +213,8 @@ export const ApiService = {
       return newOrder;
     }
 
-    const { data: store } = await supabase.from('stores').select('id').eq('slug', storeSlug).single();
-    if (!store) throw new Error("Store not found");
+    const { data: store, error: storeErr } = await supabase.from('stores').select('id').eq('slug', storeSlug).single();
+    if (storeErr || !store) throw new Error("Store lookup failed for order.");
 
     const dbOrder = {
       store_id: store.id,
@@ -218,21 +230,25 @@ export const ApiService = {
       customer_postal_code: orderData.customerPostalCode,
       selected_variants: orderData.selectedVariants,
       source: orderData.source,
-      status: 'pending',
-      date: new Date().toISOString()
+      status: 'pending'
     };
 
     const { data: order, error } = await supabase.from('orders').insert(dbOrder).select().single();
-    if (error) throw error;
+    if (error) {
+      console.error("Create Order SQL Error:", error.message);
+      throw error;
+    }
     return order as unknown as Order;
   },
 
-  async register(data: any): Promise<AppUser> {
-    if (!isSupabaseConfigured) throw new Error("Supabase is required for Registration.");
+  async register(data: { identifier: string, password?: string, authType: 'email' | 'phone', referredBy?: string }): Promise<AppUser> {
+    if (!isSupabaseConfigured) throw new Error("Network connection required for registration.");
+    
     const { error: authError } = await supabase.auth.signUp({
       email: data.identifier,
       password: data.password || 'default-secret-123',
     });
+    
     if (authError) throw authError;
 
     const newUser = {
@@ -249,14 +265,14 @@ export const ApiService = {
   },
 
   async login(identifier: string, password?: string): Promise<AppUser> {
-    if (!isSupabaseConfigured) throw new Error("Supabase is required for Login.");
+    if (!isSupabaseConfigured) throw new Error("Network connection required for login.");
     const { error } = await supabase.auth.signInWithPassword({
       email: identifier,
       password: password || '',
     });
     if (error) throw error;
     const user = await this.getCurrentUser();
-    if (!user) throw new Error("User data not found");
+    if (!user) throw new Error("User profile could not be loaded.");
     return user;
   },
 
