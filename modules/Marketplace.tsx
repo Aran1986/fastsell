@@ -20,7 +20,13 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
     const products: (Product & { storeSlug: string; storeName: string; storeColor: string; createdAt: string })[] = [];
     links.forEach(link => {
       link.products.forEach(p => {
-        products.push({ ...p, storeSlug: link.slug, storeName: link.title, storeColor: link.themeColor, createdAt: new Date().toISOString() });
+        products.push({ 
+          ...p, 
+          storeSlug: link.slug, 
+          storeName: link.title, 
+          storeColor: link.themeColor, 
+          createdAt: new Date().toISOString() 
+        });
       });
     });
     return products;
@@ -37,9 +43,11 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
       const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.storeName.toLowerCase().includes(search.toLowerCase());
       const matchesCat = activeCategory === 'همه' || p.category === activeCategory;
       const matchesPrice = !maxPrice || (p.discountPrice || p.price) <= Number(maxPrice);
-      // Fixed rating logic: using (p.rating || 0) to handle potential undefined cases
-      const matchesRating = (p.rating || 0) >= minRating;
+      // Corrected logic: if minRating is 0, it matches all. Otherwise, rating must be >= minRating.
+      const productRating = p.rating || 0;
+      const matchesRating = productRating >= minRating;
       const matchesDiscount = !onlyDiscounts || (!!p.discountPrice);
+      
       return matchesSearch && matchesCat && matchesPrice && matchesRating && matchesDiscount;
     });
 
@@ -72,16 +80,24 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">حداقل امتیاز</label>
                        <div className="flex gap-2">
                           {[3, 4, 4.5].map(r => (
-                            <button key={r} onClick={() => setMinRating(minRating === r ? 0 : r)} className={`flex-1 py-2 rounded-xl text-[10px] font-black border transition-all ${minRating === r ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-105' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                            <button 
+                              key={r} 
+                              onClick={() => setMinRating(minRating === r ? 0 : r)} 
+                              className={`flex-1 py-2 rounded-xl text-[10px] font-black border transition-all ${minRating === r ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-105' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
+                            >
                               {r}+ ⭐
                             </button>
                           ))}
                        </div>
-                       {minRating > 0 && <button onClick={() => setMinRating(0)} className="text-[9px] font-black text-red-400 mt-2 hover:underline">حذف فیلتر امتیاز</button>}
+                       {minRating > 0 && (
+                         <button onClick={() => setMinRating(0)} className="text-[9px] font-black text-red-400 mt-2 hover:underline w-full text-right">
+                           × حذف فیلتر امتیاز ({minRating}+)
+                         </button>
+                       )}
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl cursor-pointer" onClick={() => setOnlyDiscounts(!onlyDiscounts)}>
                        <span className="text-[10px] font-black text-slate-500">فقط تخفیف‌دارها</span>
-                       <input type="checkbox" checked={onlyDiscounts} onChange={e => setOnlyDiscounts(e.target.checked)} className="w-4 h-4 accent-indigo-600" />
+                       <input type="checkbox" checked={onlyDiscounts} readOnly className="w-4 h-4 accent-indigo-600" />
                     </div>
                     <div>
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">دسته‌بندی‌ها</label>
