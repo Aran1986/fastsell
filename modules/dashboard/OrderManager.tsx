@@ -32,6 +32,9 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
     setSelectedOrder(null);
   };
 
+  // Defensive check: Ensure orders is an array before calling slice
+  const safeOrders = Array.isArray(activeLink.orders) ? activeLink.orders : [];
+
   return (
     <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm">
       <div className="p-8 border-b border-slate-50">
@@ -50,14 +53,18 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {activeLink.orders.slice().reverse().map(o => (
+            {safeOrders.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="p-20 text-center text-slate-300 font-bold italic">هنوز سفارشی ثبت نشده است.</td>
+              </tr>
+            ) : safeOrders.slice().reverse().map(o => (
               <tr key={o.id} className="hover:bg-slate-50/50 transition-all">
                 <td className="p-6">
                    <div className="font-black text-slate-800">{o.productName}</div>
                    <div className="text-[10px] text-slate-400 font-bold mt-1">{o.customerEmail} | {o.customerPhone}</div>
                 </td>
                 <td className="p-6">
-                   <div className="font-black text-indigo-600">{o.totalPaid.toLocaleString()} <span className="text-[9px]">{o.currency}</span></div>
+                   <div className="font-black text-indigo-600">{(o.totalPaid || 0).toLocaleString()} <span className="text-[9px]">{o.currency}</span></div>
                 </td>
                 <td className="p-6">
                   <span className={`text-[9px] font-black px-3 py-1 rounded-full ${

@@ -20,7 +20,8 @@ const Header: React.FC<HeaderProps> = ({ onLogout, user }) => {
     { code: 'fa', label: 'فارسی' }
   ];
 
-  const unreadCount = user?.notifications?.filter(n => !n.isRead).length || 0;
+  const safeNotifications = Array.isArray(user?.notifications) ? user.notifications : [];
+  const unreadCount = safeNotifications.filter(n => !n.isRead).length;
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -66,9 +67,9 @@ const Header: React.FC<HeaderProps> = ({ onLogout, user }) => {
                 <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[100] animate-in slide-in-from-top-2">
                   <div className="p-4 border-b border-slate-50 font-black text-xs text-slate-900">اعلان‌ها</div>
                   <div className="max-h-64 overflow-y-auto">
-                    {(!user.notifications || user.notifications.length === 0) ? (
+                    {safeNotifications.length === 0 ? (
                       <div className="p-8 text-center text-[10px] font-bold text-slate-300 italic">اعلانی وجود ندارد</div>
-                    ) : user.notifications.slice().reverse().map(n => (
+                    ) : safeNotifications.slice().reverse().map(n => (
                       <div key={n.id} className={`p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors ${!n.isRead ? 'bg-indigo-50/30' : ''}`}>
                          <p className="text-[11px] font-bold text-slate-700 leading-relaxed">{n.text}</p>
                          <span className="text-[9px] text-slate-400 mt-2 block">{new Date(n.date).toLocaleTimeString('fa-IR')}</span>

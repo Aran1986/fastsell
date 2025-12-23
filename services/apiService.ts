@@ -22,7 +22,8 @@ export const ApiService = {
       authType: user.auth_type as 'email' | 'phone',
       registeredAt: user.registered_at,
       referralCode: user.referral_code,
-      referredBy: user.referred_by
+      referredBy: user.referred_by,
+      notifications: user.notifications || []
     };
   },
 
@@ -38,7 +39,8 @@ export const ApiService = {
       identifier: data.identifier,
       auth_type: data.authType,
       referral_code: Math.random().toString(36).substr(2, 6).toUpperCase(),
-      referred_by: data.referredBy
+      referred_by: data.referredBy,
+      notifications: []
     };
 
     const { data: user, error } = await supabase
@@ -83,7 +85,8 @@ export const ApiService = {
       shippingFee: s.shipping_fee,
       defaultCurrency: s.default_currency as Currency,
       totalSales: s.total_sales,
-      bankDetails: s.bank_details,
+      bankDetails: s.bank_details || {},
+      orders: s.orders || [],
       products: (s.products || []).map((p: any) => ({
         ...p,
         discountPrice: p.discount_price,
@@ -96,6 +99,7 @@ export const ApiService = {
   },
 
   async saveStore(store: SalesLink): Promise<void> {
+    // Fix: Access shippingFee from SalesLink interface instead of shipping_fee
     const storeData = {
       owner_email: store.ownerEmail,
       slug: store.slug,
@@ -106,12 +110,10 @@ export const ApiService = {
       shipping_fee: store.shippingFee,
       default_currency: store.defaultCurrency,
       categories: store.categories,
-      // Fixed: bank_details should be read from store.bankDetails (camelCase in TS)
-      bank_details: store.bankDetails
+      bank_details: store.bankDetails,
+      orders: store.orders || []
     };
 
-    // Only include ID if it's a valid UUID. If it's a mock ID like 'store_1', 
-    // let Supabase generate a proper UUID.
     const payload = isUUID(store.id) ? { id: store.id, ...storeData } : storeData;
 
     const { error } = await supabase
@@ -123,12 +125,12 @@ export const ApiService = {
   },
 
   async createOrder(storeSlug: string, orderData: any): Promise<Order> {
-    const { data: store } = await supabase.from('stores').select('id, owner_email').eq('slug', storeSlug).single();
+    const { data: store } = await supabase.from('stores').select('id, owner_email, orders').eq('slug', storeSlug).single();
     if (!store) throw new Error("Store not found");
 
     const dbOrder = {
       store_id: store.id,
-      product_id: isUUID(orderData.productId) ? orderData.productId : undefined,
+      product_id: isUUID(orderData.productId) ? orderData.productId : null,
       product_name: orderData.productName,
       amount: orderData.amount,
       shipping_fee: orderData.shippingFee,
@@ -138,8 +140,10 @@ export const ApiService = {
       customer_phone: orderData.customerPhone,
       customer_address: orderData.customerAddress,
       customer_postal_code: orderData.customerPostalCode,
-      selected_variants: orderData.selected_variants,
-      source: orderData.source
+      selected_variants: orderData.selectedVariants,
+      source: orderData.source,
+      status: 'pending',
+      date: new Date().toISOString()
     };
 
     const { data: order, error } = await supabase
