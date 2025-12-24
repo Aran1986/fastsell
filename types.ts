@@ -32,6 +32,17 @@ export interface AppNotification {
   type: 'sale' | 'status_update' | 'system';
 }
 
+export interface Review {
+  id: string;
+  orderId: string;
+  productId: string;
+  customerName: string;
+  customerEmail: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
 export interface Order {
   id: string;
   productId: string;
@@ -56,6 +67,7 @@ export interface Order {
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
   date: string;
   source: 'direct' | 'marketplace';
+  trafficSource?: string;
   systemFee: number;
   affiliateReward: number;
   sellerNet: number;
@@ -75,6 +87,8 @@ export interface Product {
   stock: number;
   rating: number;
   reviewCount: number;
+  viewCount?: number;
+  notifyMeCount?: number;
   variants?: ProductVariant[];
   isFeatured?: boolean;
   shippingMethod?: 'post' | 'delivery' | 'digital';
@@ -88,6 +102,7 @@ export interface SalesLink {
   bio: string;
   products: Product[];
   orders: Order[];
+  reviews?: Review[];
   themeColor: string;
   buyButtonColor?: string;
   totalSales: number;
@@ -95,6 +110,12 @@ export interface SalesLink {
   defaultCurrency: Currency;
   categories: string[];
   bankDetails?: BankDetails;
+  // Trust & Reputation Layer (Layer 3)
+  trustScore?: number;
+  reputationPoints?: number; // New: Gamified points
+  lastActiveAt?: string; // New: To track seller activity
+  avgResponseTimeMinutes?: number;
+  deliverySuccessCount?: number;
 }
 
 export interface AppUser {

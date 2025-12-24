@@ -6,8 +6,8 @@ export const BUSINESS_RULES = {
   AFFILIATE_REWARD_RATE: 0.001, // 0.1%
 
   // Founder Seller Program
-  FOUNDER_MAX_SELLERS: 1000, // Only first 1000 qualify
-  FOUNDER_TERMINATION_LIMIT: 10000, // Program ends if platform reaches 10k sellers
+  FOUNDER_MAX_SELLERS: 10000, // Only first 10,000 qualify
+  FOUNDER_TERMINATION_LIMIT: 50000, // Program ends if platform reaches 50k sellers
   FOUNDER_PROFIT_POOL_PERCENT: 0.12, // 12% of Net Profit
   FOUNDER_DURATION_YEARS: 5,
   INFRASTRUCTURE_RESERVE_PERCENT: 0.20, // 20% reserved before profit pool

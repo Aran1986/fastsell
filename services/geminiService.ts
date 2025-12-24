@@ -1,7 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Always initialize GoogleGenAI with a named parameter for the API key.
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateProductDescription = async (productName: string): Promise<string> => {
@@ -22,31 +21,17 @@ export const generateProductDescription = async (productName: string): Promise<s
   }
 };
 
-export const generateProductSuggestions = async (niche: string) => {
-    const ai = getAI();
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: `List 3 popular products people sell in the ${niche} niche. Return JSON.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            name: { type: Type.STRING },
-                            suggestedPrice: { type: Type.NUMBER }
-                        },
-                        required: ["name", "suggestedPrice"]
-                    }
-                }
-            }
-        });
-        const text = response.text;
-        return text ? JSON.parse(text) : [];
-    } catch (error) {
-        console.error("Gemini Suggestions Error:", error);
-        return [];
-    }
-}
+export const summarizeReviews = async (reviews: string[]): Promise<string> => {
+  if (!reviews || reviews.length === 0) return "هنوز نظری ثبت نشده است.";
+  const ai = getAI();
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `این نظرات مشتریان در مورد یک محصول است. لطفا آن‌ها را تحلیل کرده و در ۲ جمله کوتاه به زبان فارسی بگویید خریداران به طور کلی چه حسی دارند و نقاط قوت اصلی چیست: \n${reviews.join('\n')}`,
+      config: { temperature: 0.5 }
+    });
+    return response.text?.trim() || "خریداران از کیفیت محصول رضایت دارند.";
+  } catch (e) {
+    return "تحلیل نظرات در حال حاضر مقدور نیست.";
+  }
+};

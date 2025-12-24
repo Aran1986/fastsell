@@ -9,7 +9,7 @@ const Transparency: React.FC = () => {
       <Header />
       <main className="max-w-5xl mx-auto px-6 py-16 w-full">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-black text-slate-900 mb-6">شفافیت مالی و توزیع سود</h1>
+          <h1 className="text-6xl font-black text-slate-900 mb-6">شفافیت مالی و توزیع سود</h1>
           <p className="text-xl text-slate-500 font-bold max-w-2xl mx-auto">
             ما معتقدیم پلتفرم بدون فروشندگانش هیچ هویتی ندارد. به همین دلیل بخشی از سود کل پلتفرم را با شما تقسیم می‌کنیم.
           </p>
@@ -32,65 +32,60 @@ const Transparency: React.FC = () => {
              <div className="text-4xl mb-4">🤝</div>
              <h3 className="font-black text-slate-900 mb-2">معرف (Affiliate)</h3>
              <div className="text-3xl font-black text-green-600">٪{(BUSINESS_RULES.AFFILIATE_REWARD_RATE * 100)}</div>
-             <p className="text-[10px] text-slate-400 font-bold mt-4 uppercase tracking-widest">پاداش معرف از فروش</p>
+             <p className="text-[10px] text-slate-400 font-bold mt-4 uppercase tracking-widest">پاداش معرفی از فروش</p>
           </div>
         </div>
 
-        <div className="bg-slate-900 text-white rounded-[3.5rem] p-12 mb-16 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 blur-[100px] rounded-full"></div>
+        {/* Detailed Founder Section */}
+        <div className="bg-slate-900 text-white rounded-[4rem] p-12 mb-16 shadow-2xl relative overflow-hidden border border-white/10">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] rounded-full"></div>
+          
           <div className="relative z-10">
-            <h2 className="text-4xl font-black mb-8">طرح ویژه فروشندگان موسس (Founders) 💎</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-               <div className="space-y-6">
-                  <p className="text-indigo-200 font-bold text-lg leading-relaxed">
-                    ما <span className="text-white bg-indigo-600 px-2 py-1 rounded-lg">{(BUSINESS_RULES.FOUNDER_PROFIT_POOL_PERCENT * 100)}٪ از کل سود پلتفرم</span> را ماهانه بین <span className="text-white border-b-2 border-indigo-500 font-black">{BUSINESS_RULES.FOUNDER_MAX_SELLERS.toLocaleString()} فروشنده اولی</span> که به ما بپیوندند، تقسیم می‌کنیم.
+            <div className="flex flex-col lg:flex-row justify-between items-start gap-12">
+               <div className="flex-1">
+                  <span className="inline-block bg-indigo-600 text-[10px] font-black px-4 py-1.5 rounded-full mb-6 uppercase tracking-[0.2em]">Founder Program 2025</span>
+                  <h2 className="text-5xl font-black mb-8 leading-tight">طرح فروشندگان موسس 💎</h2>
+                  <p className="text-indigo-200 font-bold text-lg leading-relaxed mb-8">
+                    اولین <span className="text-white border-b-2 border-indigo-400">{BUSINESS_RULES.FOUNDER_MAX_SELLERS.toLocaleString()} نفری</span> که در FASTSell فروشگاه خود را فعال کنند، به عنوان "شریک استراتژیک" شناخته شده و در سود خالص پلتفرم سهیم می‌شوند.
                   </p>
-                  
-                  <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-4">
-                     <h4 className="font-black text-indigo-400 text-sm">اعتبار و انقضای طرح:</h4>
-                     <p className="text-xs text-slate-300 font-bold leading-relaxed">
-                        این پاداش ویژه تا زمان وقوع یکی از دو شرط زیر پابرجا خواهد بود:
-                     </p>
-                     <ul className="text-xs space-y-2 text-slate-400">
-                        <li className="flex items-center gap-2">
-                           <span className="text-indigo-500">●</span> گذشت <span className="text-white font-black">{BUSINESS_RULES.FOUNDER_DURATION_YEARS} سال</span> از زمان راه‌اندازی.
-                        </li>
-                        <li className="flex items-center gap-2">
-                           <span className="text-indigo-500">●</span> رسیدن تعداد کل فروشندگان پلتفرم به <span className="text-white font-black">{BUSINESS_RULES.FOUNDER_TERMINATION_LIMIT.toLocaleString()} نفر</span>.
-                        </li>
-                     </ul>
-                  </div>
 
-                  <ul className="space-y-4 pt-4">
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                      <span className="font-bold">توزیع عادلانه بر اساس امتیاز (Score) ماهانه</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                      <span className="font-bold">سقف ۵٪ سهم برای هر نفر جهت جلوگیری از انحصار</span>
-                    </li>
-                  </ul>
-               </div>
-               <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8">
-                  <h4 className="font-black text-indigo-400 mb-6 border-b border-white/5 pb-4">فرمول محاسبه امتیاز (Score)</h4>
                   <div className="space-y-6">
-                     <div className="flex justify-between items-center">
-                        <span className="text-sm font-bold">هر محصول فعال (تا سقف ۵)</span>
-                        <span className="font-black text-indigo-300">+{BUSINESS_RULES.SCORE_PER_PRODUCT} امتیاز</span>
+                    <div className="flex items-start gap-4">
+                       <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">۱</div>
+                       <div>
+                          <h4 className="font-black text-white">تعریف فروشنده فعال (Active)</h4>
+                          <p className="text-xs text-slate-400 mt-1 font-bold">داشتن حداقل ۱ محصول موجود + ثبت حداقل ۱ تراکنش موفق در بازه ۳۰ روزه.</p>
+                       </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                       <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">۲</div>
+                       <div>
+                          <h4 className="font-black text-white">مدت زمان شراکت</h4>
+                          <p className="text-xs text-slate-400 mt-1 font-bold">واریز سود به مدت {BUSINESS_RULES.FOUNDER_DURATION_YEARS} سال یا تا رسیدن پلتفرم به {BUSINESS_RULES.FOUNDER_TERMINATION_LIMIT.toLocaleString()} فروشنده.</p>
+                       </div>
+                    </div>
+                  </div>
+               </div>
+
+               <div className="w-full lg:w-[400px] bg-white/5 rounded-[3rem] p-8 border border-white/10 backdrop-blur-sm">
+                  <h3 className="font-black text-indigo-400 mb-6 text-lg border-b border-white/5 pb-4">مثال عددی توزیع سود</h3>
+                  <div className="space-y-6">
+                     <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
+                        <span className="text-xs font-bold text-slate-400">سود خالص کل پلتفرم:</span>
+                        <span className="font-black text-white text-lg">۱۰,۰۰۰,۰۰۰,۰۰۰ <span className="text-[10px] opacity-40">تومان</span></span>
                      </div>
-                     <div className="flex justify-between items-center">
-                        <span className="text-sm font-bold">هر ۱ میلیون تومان فروش</span>
-                        <span className="font-black text-indigo-300">+{BUSINESS_RULES.SCORE_PER_MILLION_SALES} امتیاز</span>
+                     <div className="flex justify-between items-center bg-indigo-600/20 p-4 rounded-2xl border border-indigo-500/30">
+                        <span className="text-xs font-bold text-indigo-200">سهم استخر موسسین (۱۲٪):</span>
+                        <span className="font-black text-indigo-300 text-lg">۱,۲۰۰,۰۰۰,۰۰۰ <span className="text-[10px] opacity-40">تومان</span></span>
                      </div>
-                     <div className="flex justify-between items-center">
-                        <span className="text-sm font-bold">هر زیرمجموعه (فروشنده) فعال</span>
-                        <span className="font-black text-indigo-300">+{BUSINESS_RULES.SCORE_PER_ACTIVE_REFERRAL} امتیاز</span>
+                     <div className="p-4 space-y-3">
+                        <p className="text-[10px] text-slate-400 leading-relaxed font-bold italic">
+                           اگر شما در آن ماه ۱۰ امتیاز فعالیت کسب کرده باشید و مجموع امتیازات همه واجدین شرایط در آن ماه، ۵۰۰۰ امتیاز باشد:
+                        </p>
+                        <div className="bg-green-500/10 p-3 rounded-xl text-center">
+                           <span className="text-sm font-black text-green-400">سهم شما: ۲,۴۰۰,۰۰۰ تومان واریز نقدی</span>
+                        </div>
                      </div>
-                     <div className="h-px bg-white/10 my-2"></div>
-                     <p className="text-[10px] text-slate-400 leading-relaxed italic">
-                        مثال: اگر شما ۳ محصول فعال داشته باشید و ۱۰ میلیون تومان بفروشید و ۲ فروشنده فعال معرفی کنید، امتیاز شما در آن ماه برابر با (۳ + ۱۰ + ۶) = ۱۹ امتیاز خواهد بود.
-                     </p>
                   </div>
                </div>
             </div>

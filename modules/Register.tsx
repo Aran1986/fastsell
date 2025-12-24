@@ -41,11 +41,9 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
         const newUser = await ApiService.register({ identifier, password, authType, referredBy: refCode || undefined });
         
         if (newUser) {
-          // Auto-login if confirmation is disabled in Supabase
           onLogin(newUser);
           navigate('/dashboard');
         } else {
-          // Show email message if confirmation is enabled
           setRegSuccess(true);
         }
       } else {
@@ -73,7 +71,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
          <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100">
             <div className="text-6xl mb-6">📩</div>
             <h2 className="text-2xl font-black mb-4">ایمیل خود را تایید کنید</h2>
-            <p className="text-slate-500 font-bold mb-8 leading-relaxed">یک لینک فعال‌سازی برای شما ارسال شد. لطفاً پوشه (Inbox) یا (Spam) خود را چک کنید. (نکته: برای عبور از این مرحله در حالت تست، Confirm Email را در پنل Supabase خاموش کنید)</p>
+            <p className="text-slate-500 font-bold mb-8 leading-relaxed">یک لینک فعال‌سازی برای شما ارسال شد.</p>
             <button onClick={() => setRegSuccess(false)} className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black">بازگشت به ورود</button>
          </div>
       </div>
@@ -91,7 +89,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
                 <h2 className="text-2xl font-black text-slate-900">ساخت ویترین جدید</h2>
                 <p className="text-slate-400 text-xs font-bold mt-1">خوش آمدید {user.identifier}</p>
              </div>
-             <form onSubmit={handleCreateShop} className="space-y-6">
+             <form onSubmit={handleCreateShop} noValidate className="space-y-6">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2">نام کسب‌وکار</label>
                   <input required type="text" value={shopName} onChange={e => {
@@ -126,7 +124,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
           <h2 className="text-3xl font-black text-slate-900 mb-2 text-center">{authMode === 'register' ? 'خوش آمدید! ✨' : 'بازگشت دوباره 🔐'}</h2>
           <p className="text-slate-400 text-center text-sm font-bold mb-8">برای شروع فعالیت اطلاعات زیر را تکمیل کنید.</p>
 
-          <form onSubmit={handleAuth} className="space-y-5">
+          <form onSubmit={handleAuth} noValidate className="space-y-5">
              <div className="flex gap-2 mb-2">
                 <button type="button" onClick={() => setAuthType('email')} className={`flex-1 py-3 rounded-xl text-[10px] font-black border transition-all ${authType === 'email' ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-100 text-slate-400'}`}>ایمیل</button>
                 <button type="button" onClick={() => setAuthType('phone')} className={`flex-1 py-3 rounded-xl text-[10px] font-black border transition-all ${authType === 'phone' ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-100 text-slate-400'}`}>شماره موبایل</button>
@@ -134,16 +132,18 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
 
              <input 
                required 
-               type={authType === 'email' ? 'email' : 'tel'} 
+               type="text" 
+               name="identifier"
                value={identifier} 
                onChange={e => setIdentifier(e.target.value)} 
-               placeholder={authType === 'email' ? 'example@mail.com' : '0912XXXXXXX'} 
-               className="w-full px-6 py-4 rounded-2xl border border-slate-200 outline-none font-bold text-center dir-ltr" 
+               placeholder={authType === 'email' ? 'نام کاربری یا ایمیل' : '0912XXXXXXX'} 
+               className="w-full px-6 py-4 rounded-2xl border border-slate-200 outline-none font-bold text-center" 
              />
 
              <input 
                required 
                type="password" 
+               name="password"
                value={password} 
                onChange={e => setPassword(e.target.value)} 
                placeholder="رمز عبور" 

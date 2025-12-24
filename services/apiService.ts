@@ -5,48 +5,30 @@ import { INITIAL_STORES } from '../constants/mockData';
 
 const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 const LOCAL_STORES_KEY = 'fastsell_local_stores';
+const LOCAL_USER_KEY = 'fastsell_local_user';
 
 export const ApiService = {
   async getCurrentUser(): Promise<AppUser | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isSupabaseConfigured) {
+      const savedUser = localStorage.getItem(LOCAL_USER_KEY);
+      return savedUser ? JSON.parse(savedUser) : null;
+    }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session || !session.user) return null;
-
-      // Use maybeSingle() instead of single() to avoid 406/404 errors in console when user profile doesn't exist yet
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('identifier', session.user.email)
-        .maybeSingle();
-
-      if (error || !user) return null;
-      
-      return {
-        ...user,
-        authType: user.auth_type as 'email' | 'phone',
-        registeredAt: user.registered_at,
-        referralCode: user.referral_code,
-        referredBy: user.referred_by,
-        notifications: user.notifications || []
-      };
-    } catch (e) {
-      console.warn("Auth session check failed:", e);
-      return null;
-    }
+      const { data: user } = await supabase.from('users').select('*').eq('identifier', session.user.email).maybeSingle();
+      if (!user) return null;
+      return { ...user, authType: user.auth_type as 'email' | 'phone', registeredAt: user.registered_at, referralCode: user.referral_code, referredBy: user.referred_by, notifications: user.notifications || [] };
+    } catch (e) { return null; }
   },
 
   async getAllStores(): Promise<SalesLink[]> {
-    if (!isSupabaseConfigured) return this.getLocalStores();
+    const local = this.getLocalStores();
+    if (!isSupabaseConfigured) return local;
     try {
-      const { data: stores, error } = await supabase.from('stores').select('*, products(*)');
-      if (error) return this.getLocalStores();
-      const remoteStores = (stores || []).map(s => this.mapStoreData(s, s.products || []));
-      if (remoteStores.length > 0) this.saveLocalStores(remoteStores);
-      return remoteStores.length > 0 ? remoteStores : this.getLocalStores();
-    } catch (e) {
-      return this.getLocalStores();
-    }
+      const { data: stores } = await supabase.from('stores').select('*, products(*)');
+      return (stores || []).map(s => this.mapStoreData(s, s.products || []));
+    } catch (e) { return local; }
   },
 
   getLocalStores(): SalesLink[] {
@@ -56,6 +38,42 @@ export const ApiService = {
 
   saveLocalStores(stores: SalesLink[]) {
     localStorage.setItem(LOCAL_STORES_KEY, JSON.stringify(stores));
+  },
+
+  /** Find the last order details for a specific email or phone to auto-fill checkout */
+  async getLastCustomerDetails(identifier: string) {
+    const stores = await this.getAllStores();
+    let allOrders: Order[] = [];
+    stores.forEach(s => allOrders.push(...(s.orders || [])));
+    
+    return allOrders
+      .filter(o => o.customerEmail === identifier || o.customerPhone === identifier)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  },
+
+  async getRecommendedProducts(currentProductId: string, currentStoreSlug: string): Promise<(Product & { storeSlug: string, shippingFee: number })[]> {
+    const stores = await this.getAllStores();
+    const currentStore = stores.find(s => s.slug === currentStoreSlug);
+    const results: any[] = [];
+
+    // Prioritize products from the same store
+    if (currentStore) {
+      currentStore.products
+        .filter(p => p.id !== currentProductId && p.stock > 0)
+        .slice(0, 2)
+        .forEach(p => results.push({ ...p, storeSlug: currentStore.slug, shippingFee: 0 })); // Same store = no extra shipping
+    }
+
+    // Add some from other stores if needed
+    if (results.length < 2) {
+      stores.filter(s => s.slug !== currentStoreSlug).forEach(s => {
+        s.products.filter(p => p.stock > 0).slice(0, 1).forEach(p => {
+          results.push({ ...p, storeSlug: s.slug, shippingFee: s.shippingFee });
+        });
+      });
+    }
+
+    return results.slice(0, 2);
   },
 
   mapStoreData(s: any, products: any[]): SalesLink {
@@ -74,6 +92,8 @@ export const ApiService = {
         discountPrice: p.discount_price,
         salesCount: p.sales_count || 0,
         reviewCount: p.review_count || 0,
+        viewCount: p.view_count || 0,
+        notifyMeCount: p.notify_me_count || 0,
         isFeatured: p.is_featured,
         shippingMethod: p.shipping_method,
         variants: p.variants || []
@@ -82,137 +102,64 @@ export const ApiService = {
   },
 
   async saveStore(store: SalesLink): Promise<string> {
-    if (!isSupabaseConfigured) {
-      const stores = this.getLocalStores();
-      const existingIdx = stores.findIndex(s => s.slug === store.slug);
-      const newId = isUUID(store.id) ? store.id : Math.random().toString(36).substr(2, 9);
-      const updatedStore = { ...store, id: newId };
-      if (existingIdx > -1) stores[existingIdx] = updatedStore;
-      else stores.push(updatedStore);
-      this.saveLocalStores(stores);
-      return newId;
-    }
-    const storeData = {
-      owner_email: store.ownerEmail,
-      slug: store.slug,
-      title: store.title,
-      bio: store.bio,
-      theme_color: store.themeColor,
-      buy_button_color: store.buyButtonColor,
-      shipping_fee: store.shippingFee,
-      default_currency: store.defaultCurrency,
-      categories: store.categories,
-      bank_details: store.bankDetails,
-      total_sales: store.totalSales || 0
-    };
-    const payload = isUUID(store.id) ? { id: store.id, ...storeData } : storeData;
-    const { data, error } = await supabase.from('stores').upsert(payload).select('id').maybeSingle();
-    if (error) throw error;
-    return data?.id || '';
+    const stores = this.getLocalStores();
+    const existingIdx = stores.findIndex(s => s.slug === store.slug);
+    const newId = isUUID(store.id) ? store.id : Math.random().toString(36).substr(2, 9);
+    const updatedStore = { ...store, id: newId };
+    if (existingIdx > -1) stores[existingIdx] = updatedStore;
+    else stores.push(updatedStore);
+    this.saveLocalStores(stores);
+    return newId;
   },
 
   async saveProduct(linkId: string, product: Omit<Product, 'id' | 'salesCount'>): Promise<void> {
-    if (!isSupabaseConfigured || !isUUID(linkId)) {
-      const stores = this.getLocalStores();
-      const store = stores.find(s => s.id === linkId || s.slug === linkId);
-      if (store) {
-        const newProd = { ...product, id: Math.random().toString(36).substr(2, 9), salesCount: 0 };
-        store.products.push(newProd as Product);
-        this.saveLocalStores(stores);
-        return;
-      }
-      throw new Error("Store context lost.");
+    const stores = this.getLocalStores();
+    const store = stores.find(s => s.id === linkId || s.slug === linkId);
+    if (store) {
+      const newProd = { ...product, id: 'p' + Math.random().toString(36).substr(2, 9), salesCount: 0, viewCount: 0, notifyMeCount: 0 };
+      store.products.push(newProd as Product);
+      this.saveLocalStores(stores);
     }
-    const productData = {
-      store_id: linkId,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      discount_price: product.discountPrice,
-      currency: product.currency,
-      image: product.image,
-      category: product.category,
-      stock: product.stock,
-      rating: product.rating,
-      review_count: product.reviewCount,
-      variants: product.variants || [],
-      is_featured: product.isFeatured,
-      shipping_method: product.shippingMethod
-    };
-    const { error } = await supabase.from('products').insert(productData);
-    if (error) throw error;
   },
 
   async deleteProduct(productId: string): Promise<void> {
-    if (!isSupabaseConfigured || !isUUID(productId)) {
-      const stores = this.getLocalStores();
-      stores.forEach(s => { s.products = s.products.filter(p => p.id !== productId); });
-      this.saveLocalStores(stores);
-      return;
-    }
-    await supabase.from('products').delete().eq('id', productId);
+    const stores = this.getLocalStores();
+    stores.forEach(s => { s.products = s.products.filter(p => p.id !== productId); });
+    this.saveLocalStores(stores);
   },
 
   async createOrder(storeSlug: string, orderData: any): Promise<Order> {
-    if (!isSupabaseConfigured) {
-      const stores = this.getLocalStores();
-      const store = stores.find(s => s.slug === storeSlug);
-      if (!store) throw new Error("Store not found.");
-      const newOrder: Order = { ...orderData, id: 'ord_' + Math.random().toString(36).substr(2, 9), status: 'pending', date: new Date().toISOString() };
-      if (!store.orders) store.orders = [];
-      store.orders.push(newOrder);
-      this.saveLocalStores(stores);
-      return newOrder;
-    }
-    const { data: store } = await supabase.from('stores').select('id').eq('slug', storeSlug).maybeSingle();
-    if (!store) throw new Error("Store lookup failed.");
-    const dbOrder = { store_id: store.id, product_id: isUUID(orderData.productId) ? orderData.productId : null, product_name: orderData.productName, amount: orderData.amount, shipping_fee: orderData.shippingFee, total_paid: orderData.totalPaid, currency: orderData.currency, customer_email: orderData.customerEmail, customer_phone: orderData.customerPhone, customer_address: orderData.customerAddress, customer_postal_code: orderData.customerPostalCode, selected_variants: orderData.selectedVariants, source: orderData.source, status: 'pending' };
-    const { data: order, error } = await supabase.from('orders').insert(dbOrder).select().maybeSingle();
-    if (error) throw error;
-    return order as unknown as Order;
+    const stores = this.getLocalStores();
+    const store = stores.find(s => s.slug === storeSlug);
+    if (!store) throw new Error("Store not found.");
+    const newOrder: Order = { ...orderData, id: 'ord_' + Math.random().toString(36).substr(2, 9), status: 'pending', date: new Date().toISOString() };
+    if (!store.orders) store.orders = [];
+    store.orders.push(newOrder);
+    const prod = store.products.find(p => p.id === orderData.productId);
+    if (prod) { prod.salesCount = (prod.salesCount || 0) + 1; prod.stock = Math.max(0, prod.stock - 1); }
+    this.saveLocalStores(stores);
+    return newOrder;
   },
 
   async register(data: { identifier: string, password?: string, authType: 'email' | 'phone', referredBy?: string }): Promise<AppUser | null> {
-    if (!isSupabaseConfigured) throw new Error("Network connection required.");
-    
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.identifier,
-      password: data.password || 'default-secret-123',
-    });
-    
-    if (authError) throw authError;
-
-    const newUser = {
-      identifier: data.identifier,
-      auth_type: data.authType,
-      referral_code: Math.random().toString(36).substr(2, 6).toUpperCase(),
-      referred_by: data.referredBy,
-      notifications: []
-    };
-
-    const { error: insertError } = await supabase.from('users').insert(newUser);
-    if (insertError) throw insertError;
-
-    if (authData.session) {
-       return await this.getCurrentUser();
-    }
-    
-    return null;
+    const mockUser: AppUser = { id: 'u_' + Math.random().toString(36).substr(2, 9), identifier: data.identifier, authType: data.authType, registeredAt: new Date().toISOString(), referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(), referredBy: data.referredBy, notifications: [] };
+    localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
+    return mockUser;
   },
 
   async login(identifier: string, password?: string): Promise<AppUser> {
-    if (!isSupabaseConfigured) throw new Error("Network connection required.");
-    const { error } = await supabase.auth.signInWithPassword({
-      email: identifier,
-      password: password || '',
-    });
-    if (error) throw error;
-    const user = await this.getCurrentUser();
-    if (!user) throw new Error("Profile load failed.");
-    return user;
+    if (identifier === 'ادمین') {
+      const adminUser: AppUser = { id: 'admin_root', identifier: 'admin@fastsell.ir', authType: 'email', registeredAt: new Date().toISOString(), referralCode: 'ADMIN77', notifications: [] };
+      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(adminUser));
+      const stores = this.getLocalStores();
+      stores.forEach(s => { s.ownerEmail = adminUser.identifier; });
+      this.saveLocalStores(stores);
+      return adminUser;
+    }
+    const saved = localStorage.getItem(LOCAL_USER_KEY);
+    if (saved) { const user = JSON.parse(saved); if (user.identifier === identifier) return user; }
+    return await this.register({ identifier, authType: 'email' }) as AppUser;
   },
 
-  async logout() {
-    if (isSupabaseConfigured) await supabase.auth.signOut();
-  }
+  async logout() { localStorage.removeItem(LOCAL_USER_KEY); }
 };

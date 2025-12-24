@@ -1,12 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { SalesLink, Product, Currency, BankDetails, Order, AppUser } from '../types';
-import PublicLinkView from './PublicLinkView';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { FinanceService } from '../services/financeService';
+import { ApiService } from '../services/apiService';
 
-// Modular Sub-components
+// Modular Sub-components Imports
 import ProductManager from './dashboard/ProductManager';
 import OrderManager from './dashboard/OrderManager';
 import LinkManager from './dashboard/LinkManager';
@@ -15,6 +14,8 @@ import PaymentSettings from './dashboard/PaymentSettings';
 import AppearanceSettings from './dashboard/AppearanceSettings';
 import AffiliatePanel from './dashboard/AffiliatePanel';
 import FinanceHub from './dashboard/FinanceHub';
+import AnalyticsOverview from './dashboard/AnalyticsOverview';
+import SellerPower from './dashboard/SellerPower';
 
 interface DashboardProps {
   links: SalesLink[];
@@ -23,7 +24,7 @@ interface DashboardProps {
   onAddProduct: (linkId: string, product: Omit<Product, 'id' | 'salesCount'>) => void;
   onDeleteProduct: (linkId: string, productId: string) => void;
   onUpdateBankDetails: (linkId: string, bankDetails: BankDetails) => void;
-  onUpdateProfile?: (linkId: string, data: { title: string; bio: string; defaultCurrency: Currency; categories: string[] }) => void;
+  onUpdateProfile?: (linkId: string, data: { title: string; bio: string; defaultCurrency: Currency; categories: string[]; shippingFee: number }) => void;
   onUpdateOrder?: (linkId: string, orderId: string, updates: Partial<Order>) => void;
   onUpdateThemeColor?: (linkId: string, color: string, buyButtonColor?: string) => void;
 }
@@ -32,14 +33,25 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   const { links, allLinksForPurchases, currentUser } = props;
   const { t } = useLanguage();
   const navigate = useNavigate();
+  
+  // States
   const [activeLinkId, setActiveLinkId] = useState<string | null>(links[links.length - 1]?.id || null);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance'>('products');
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation'>('products');
+  const [localLinks, setLocalLinks] = useState<SalesLink[]>(links);
 
-  const getBaseUrl = () => {
-    const loc = window.location;
-    return `${loc.protocol}//${loc.host}/#`;
+  useEffect(() => {
+    setLocalLinks(links);
+    if (!activeLinkId && links.length > 0) {
+      setActiveLinkId(links[links.length - 1].id);
+    }
+  }, [links, activeLinkId]);
+
+  const refreshLocalData = async () => {
+    const all = await ApiService.getAllStores();
+    setLocalLinks(all);
   };
+
+  const activeLink = localLinks.find(l => l.id === activeLinkId);
 
   const myPurchases = useMemo(() => {
     const orders: Order[] = [];
@@ -50,145 +62,185 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [allLinksForPurchases, currentUser.identifier]);
 
-  const activeLink = links.find(l => l.id === activeLinkId);
-
-  // Check for out of stock products in active link
   const outOfStockProducts = useMemo(() => {
     if (!activeLink) return [];
     return activeLink.products.filter(p => p.stock <= 0);
   }, [activeLink]);
 
-  const handleCopy = (text: string, msg: string) => {
-    navigator.clipboard.writeText(text).then(() => alert(msg));
-  };
+  const sidebarItems = [
+    { id: 'reputation', label: 'قدرت فروشنده', icon: '👑' },
+    { id: 'analytics', label: 'آنالیز ترافیک', icon: '📈' },
+    { id: 'products', label: 'محصولات', icon: '📦' },
+    { id: 'orders', label: 'سفارشات', icon: '📝' },
+    { id: 'manage-links', label: 'لینک‌های مستقیم', icon: '🔗' },
+    { id: 'profile', label: 'پروفایل و دسته‌بندی', icon: '⚙️' },
+    { id: 'bank', label: 'تنظیمات پرداخت', icon: '🏦' },
+    { id: 'appearance', label: 'ظاهر و تم', icon: '🎨' },
+    { id: 'finance', label: 'هاب مالی', icon: '💰' },
+  ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
-      {/* Inventory Alert Banner */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full" dir="rtl">
+      {/* Stock Warning */}
       {outOfStockProducts.length > 0 && activeTab === 'products' && (
         <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-3xl flex items-center justify-between animate-in slide-in-from-top-4">
            <div className="flex items-center gap-3">
               <span className="text-xl">⚠️</span>
               <p className="text-red-600 text-sm font-black">تعداد {outOfStockProducts.length} محصول از فروشگاه شما ناموجود شده است. لطفاً انبار را شارژ کنید.</p>
            </div>
-           <button onClick={() => {}} className="text-[10px] font-black text-red-400 underline">مشاهده لیست</button>
         </div>
       )}
 
+      {/* Header Info */}
       <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900">
-            {activeTab === 'purchases' ? '🛍️ تاریخچه خریدهای من' : activeTab === 'affiliate' ? '🤝 سیستم کسب درآمد (Affiliate)' : activeTab === 'finance' ? '💎 مدیریت مالی و سود' : activeLink?.title || 'مدیریت فروشگاه'}
-          </h1>
-          {activeTab !== 'purchases' && activeTab !== 'affiliate' && activeTab !== 'finance' && activeLink && (
-            <div className="flex items-center gap-2 mt-2" dir="ltr">
-              <span className="text-[10px] font-mono text-indigo-400 opacity-70 truncate max-w-[200px]">.../s/{activeLink.slug}</span>
-              <button onClick={() => handleCopy(`${getBaseUrl()}/s/${activeLink.slug}`, 'لینک کپی شد!')} className="text-[10px] bg-slate-100 px-3 py-1.5 rounded-xl font-black hover:bg-slate-200 ml-2">کپی لینک</button>
-            </div>
-          )}
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 rounded-2xl">
+             <span className="text-2xl">🏪</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900">
+              {activeTab === 'purchases' ? '🛍️ خریدهای من' : activeTab === 'affiliate' ? '🤝 همکاری در فروش' : activeLink?.title || 'داشبورد'}
+            </h1>
+            {activeLink && activeTab !== 'purchases' && activeTab !== 'affiliate' && (
+              <p className="text-xs font-bold text-slate-400 mt-0.5" dir="ltr">/s/{activeLink.slug}</p>
+            )}
+          </div>
         </div>
         <div className="flex gap-3">
           <button onClick={() => navigate('/register')} className="bg-green-50 text-green-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-green-100 transition-all">+ ساخت فروشگاه جدید</button>
-          {activeLink && activeTab !== 'affiliate' && <button onClick={() => setIsPreviewOpen(true)} className="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-slate-200">پیش‌نمایش زنده</button>}
+          {activeLink && (
+            <button 
+              onClick={() => window.open(`/#/s/${activeLink.slug}`, '_blank')} 
+              className="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all"
+            >
+              مشاهده فروشگاه
+            </button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1 space-y-4">
+        {/* Sidebar Navigation */}
+        <aside className="lg:col-span-1 space-y-4">
           <div className="bg-white p-5 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-2">
-            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">بخش عمومی و درآمدی</h2>
-            <button onClick={() => setActiveTab('purchases')} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === 'purchases' ? 'bg-green-600 text-white shadow-xl shadow-green-100' : 'hover:bg-slate-50 text-slate-600'}`}>
+            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">بخش عمومی</h2>
+            <button onClick={() => setActiveTab('purchases')} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === 'purchases' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'hover:bg-slate-50 text-slate-600'}`}>
               <span className="text-xl">🛍️</span>
-              <span>خرید‌های من ({myPurchases.length})</span>
+              <span>خریدهای من</span>
             </button>
-            <button onClick={() => setActiveTab('affiliate')} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === 'affiliate' ? 'bg-orange-500 text-white shadow-xl shadow-orange-100' : 'hover:bg-slate-50 text-slate-600'}`}>
+            <button onClick={() => setActiveTab('affiliate')} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === 'affiliate' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'hover:bg-slate-50 text-slate-600'}`}>
               <span className="text-xl">🤝</span>
-              <span>زیرمجموعه‌گیری</span>
+              <span>زیرمجموعه‌ها</span>
             </button>
 
             <div className="h-px bg-slate-100 my-4 mx-4"></div>
-            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">فروشگاه‌های شما</h2>
-            <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                {links.length === 0 ? <p className="p-4 text-xs font-bold text-slate-300">هنوز فروشگاهی ندارید.</p> : links.map(l => (
-                  <button key={l.id} onClick={() => { setActiveLinkId(l.id); if(['purchases', 'affiliate'].includes(activeTab)) setActiveTab('products'); }} className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeLinkId === l.id && !['purchases', 'affiliate', 'finance'].includes(activeTab) ? 'bg-indigo-50 text-indigo-600 font-black border border-indigo-100' : 'hover:bg-slate-50 text-slate-500 font-bold'}`}>
-                    <span className="truncate">{l.title}</span>
-                    {activeLinkId === l.id && !['purchases', 'affiliate', 'finance'].includes(activeTab) && <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>}
-                  </button>
-                ))}
-            </div>
+            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">مدیریت فروشگاه</h2>
             
-            {activeLink && (
-              <>
-                <div className="h-px bg-slate-100 my-4 mx-4"></div>
-                <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">تنظیمات فروشگاه فعال</h2>
-                {[
-                  { id: 'finance', label: 'مدیریت مالی', icon: '💎' },
-                  { id: 'products', label: t('products'), icon: '📦' },
-                  { id: 'orders', label: t('orders'), icon: '📝' },
-                  { id: 'manage-links', label: 'لینک‌های مستقیم', icon: '🔗' },
-                  { id: 'profile', label: 'پروفایل', icon: '👤' },
-                  { id: 'bank', label: 'بانک', icon: '💳' },
-                  { id: 'appearance', label: 'ظاهر', icon: '🎨' },
-                ].map(tab => (
-                  <button key={tab.id} onClick={() => { setActiveTab(tab.id as any); }} className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'hover:bg-slate-50 text-slate-600'}`}>
-                    <span className="text-xl">{tab.icon}</span>
-                    <span>{tab.label}</span>
+            {activeLink ? (
+              <div className="space-y-1">
+                {sidebarItems.map(item => (
+                  <button 
+                    key={item.id} 
+                    onClick={() => setActiveTab(item.id as any)} 
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black text-sm ${activeTab === item.id ? 'bg-slate-900 text-white shadow-lg' : 'hover:bg-slate-50 text-slate-600'}`}
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                    <span>{item.label}</span>
                   </button>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="lg:col-span-3">
-          {activeTab === 'purchases' ? (
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm animate-in fade-in">
-              <h3 className="text-xl font-black mb-8">تاریخچه خریدهای شما ({currentUser.identifier})</h3>
-              <div className="space-y-4">
-                {myPurchases.length === 0 ? <div className="text-center py-20 text-slate-300 font-bold italic">هنوز خریدی ثبت نکرده‌اید.</div> : myPurchases.map(order => (
-                  <div key={order.id} className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-[2rem] border border-slate-100 hover:bg-slate-50 transition-all">
-                    <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-2xl">🎁</div>
-                    <div className="flex-1 text-center md:text-right">
-                      <div className="font-black text-slate-900">{order.productName}</div>
-                      <div className="text-[10px] text-slate-400 mt-1">شناسه سفارش: {order.id}</div>
-                    </div>
-                    <div className="text-center md:text-left">
-                       <div className="font-black text-indigo-600">{order.amount.toLocaleString()} <span className="text-[10px]">{order.currency}</span></div>
-                       <div className={`mt-2 px-3 py-1 rounded-full text-[9px] font-black inline-block ${order.status === 'delivered' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>{order.status === 'pending' ? 'در حال پردازش' : 'تکمیل شده'}</div>
-                    </div>
-                  </div>
                 ))}
               </div>
+            ) : (
+              <div className="p-4 text-center text-[10px] font-bold text-slate-300 italic">هنوز فروشگاهی ندارید.</div>
+            )}
+          </div>
+          
+          {/* Multi-Store Selector if more than 1 store */}
+          {links.length > 1 && (
+            <div className="bg-white p-5 rounded-[2.5rem] border border-slate-200 shadow-sm">
+               <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">تغییر فروشگاه</h2>
+               <div className="space-y-2">
+                  {links.map(l => (
+                    <button 
+                      key={l.id} 
+                      onClick={() => setActiveLinkId(l.id)} 
+                      className={`w-full p-3 rounded-xl text-right text-[11px] font-black border transition-all ${activeLinkId === l.id ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
+                    >
+                      {l.title}
+                    </button>
+                  ))}
+               </div>
+            </div>
+          )}
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="lg:col-span-3 min-h-[600px]">
+          {activeTab === 'purchases' ? (
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm animate-in fade-in">
+               <h3 className="text-xl font-black mb-8">تاریخچه خریدهای شما</h3>
+               {myPurchases.length === 0 ? (
+                 <div className="text-center py-20 text-slate-300 italic font-bold">هنوز خریدی انجام نداده‌اید.</div>
+               ) : (
+                 <div className="space-y-4">
+                    {myPurchases.map(o => (
+                      <div key={o.id} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                          <img src={o.productImage} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                          <div>
+                            <div className="text-sm font-black text-slate-900">{o.productName}</div>
+                            <div className="text-[10px] text-slate-400 font-bold mt-1">خرید از: {o.storeName}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-black text-indigo-600">{o.totalPaid.toLocaleString()} {o.currency}</div>
+                          <div className={`text-[9px] font-black mt-1 ${o.status === 'delivered' ? 'text-green-500' : 'text-orange-500'}`}>
+                            {o.status === 'pending' ? 'در انتظار' : o.status === 'shipped' ? 'ارسال شده' : 'تحویل شده'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+               )}
             </div>
           ) : activeTab === 'affiliate' ? (
             <AffiliatePanel currentUser={currentUser} allStores={allLinksForPurchases} />
-          ) : activeTab === 'finance' && activeLink ? (
-             <FinanceHub 
-               activeLink={activeLink} 
-               allUsers={[]} // In a real app, this would be fetched
-               allStores={allLinksForPurchases}
-               currentUser={currentUser}
-             />
           ) : activeLink ? (
-            <>
-              {activeTab === 'products' && <ProductManager activeLink={activeLink} onAddProduct={props.onAddProduct} onDeleteProduct={props.onDeleteProduct} />}
+            <div className="animate-in fade-in duration-500">
+              {activeTab === 'reputation' && <SellerPower activeLink={activeLink} />}
+              {activeTab === 'analytics' && <AnalyticsOverview activeLink={activeLink} />}
+              {activeTab === 'products' && (
+                <ProductManager 
+                  activeLink={activeLink} 
+                  onAddProduct={props.onAddProduct} 
+                  onDeleteProduct={props.onDeleteProduct} 
+                  refreshData={refreshLocalData} 
+                  onUpdateProfile={props.onUpdateProfile} 
+                />
+              )}
               {activeTab === 'orders' && <OrderManager activeLink={activeLink} onUpdateOrder={props.onUpdateOrder} />}
-              {activeTab === 'manage-links' && <LinkManager activeLink={activeLink} />}
+              {activeTab === 'manage-links' && <LinkManager activeLink={activeLink} refreshData={refreshLocalData} />}
               {activeTab === 'profile' && <ProfileManager activeLink={activeLink} onUpdateProfile={props.onUpdateProfile} />}
               {activeTab === 'bank' && <PaymentSettings activeLink={activeLink} onUpdateBankDetails={props.onUpdateBankDetails} />}
               {activeTab === 'appearance' && <AppearanceSettings activeLink={activeLink} onUpdateThemeColor={props.onUpdateThemeColor} />}
-            </>
-          ) : <div className="bg-white p-20 rounded-[3rem] text-center text-slate-300 font-black italic border-2 border-dashed border-slate-100">یک فروشگاه انتخاب کنید یا فروشگاه جدید بسازید.</div>}
-        </div>
+              {activeTab === 'finance' && (
+                <FinanceHub 
+                  activeLink={activeLink} 
+                  allUsers={[]} // Placeholder for users list in mock mode
+                  allStores={allLinksForPurchases} 
+                  currentUser={currentUser} 
+                />
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-[2.5rem] p-20 border border-slate-200 shadow-sm text-center flex flex-col items-center">
+               <div className="text-6xl mb-6">🏜️</div>
+               <h3 className="text-xl font-black text-slate-900 mb-2">هنوز فروشگاهی نساخته‌اید</h3>
+               <p className="text-slate-400 font-bold text-sm mb-8">برای شروع فروش و استفاده از امکانات داشبورد، اولین ویترین خود را بسازید.</p>
+               <button onClick={() => navigate('/register')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all hover:-translate-y-1">ساخت اولین فروشگاه</button>
+            </div>
+          )}
+        </main>
       </div>
-      {isPreviewOpen && activeLink && (
-        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[600] flex items-center justify-center p-4">
-          <div className="relative w-full max-sm h-full max-h-[850px] bg-slate-800 rounded-[3.5rem] border-[12px] border-slate-700 overflow-hidden shadow-2xl">
-            <div className="flex-1 bg-white h-full overflow-y-auto"><PublicLinkView links={[activeLink]} /></div>
-            <button onClick={() => setIsPreviewOpen(false)} className="absolute top-6 right-6 bg-black/60 text-white w-12 h-12 rounded-full text-3xl flex items-center justify-center font-black z-[700]">×</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

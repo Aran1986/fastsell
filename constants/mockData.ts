@@ -1,5 +1,5 @@
 
-import { SalesLink, Currency } from '../types';
+import { SalesLink, Currency, Order, Review } from '../types';
 
 const DEFAULT_FULL_CATS = [
   'عمومی', 'موبایل و تبلت', 'لپ‌تاپ و کامپیوتر', 'پوشاک مردانه', 'پوشاک زنانه', 
@@ -8,74 +8,75 @@ const DEFAULT_FULL_CATS = [
   'خدمات و آموزش', 'ساعت و اکسسوری', 'طلا و جواهر', 'لوازم دکوری'
 ];
 
+const generateMockOrders = (storeSlug: string, count: number): Order[] => {
+  const sources = ['Instagram', 'Telegram', 'Google', 'Direct', 'Twitter/X'];
+  return Array.from({ length: count }).map((_, i) => ({
+    id: `ord_${Math.random().toString(36).substr(2, 9)}`,
+    productId: `p${(i % 20) + 1}`,
+    productName: 'محصول شبیه‌سازی شده',
+    amount: 150000 + Math.random() * 2000000,
+    shippingFee: 45000,
+    totalPaid: 200000 + Math.random() * 2000000,
+    currency: Currency.IRR,
+    customerEmail: `customer${i}@test.com`,
+    customerPhone: `0912${Math.floor(1000000 + Math.random() * 9000000)}`,
+    customerAddress: 'تهران، خیابان ولیعصر، فرعی ۱۰، پلاک ۴',
+    customerPostalCode: '1234567890',
+    shippingMethod: 'post',
+    status: i % 5 === 0 ? 'delivered' : 'shipped',
+    date: new Date(Date.now() - i * 86400000).toISOString(),
+    source: 'direct',
+    trafficSource: sources[Math.floor(Math.random() * sources.length)],
+    systemFee: 5000,
+    affiliateReward: 200,
+    sellerNet: 145000
+  }));
+};
+
+const MOCK_REVIEWS: Review[] = [
+  { id: 'rev1', orderId: 'ord1', productId: 'p1', customerName: 'علی رضایی', customerEmail: 'ali@test.com', rating: 5, comment: 'عالی بود، خیلی سریع به دستم رسید و کیفیتش حرف نداره.', date: new Date().toISOString() },
+  { id: 'rev2', orderId: 'ord2', productId: 'p1', customerName: 'مریم حسینی', customerEmail: 'maryam@test.com', rating: 4, comment: 'نسبت به قیمتش واقعا می‌ارزه. فقط بسته‌بندی می‌تونست بهتر باشه.', date: new Date().toISOString() }
+];
+
 export const INITIAL_STORES: SalesLink[] = [
   {
     id: 'store_1',
-    ownerEmail: 'tech@fastsell.ir',
+    ownerEmail: 'admin@fastsell.ir',
     slug: 'digital-hub',
     title: 'دیجیتال هاب آریا',
-    bio: 'مرجع تخصصی گجت‌های روز دنیا و لوازم جانبی گیمینگ.',
+    bio: 'مرجع تخصصی گجت‌های روز دنیا و لوازم جانبی گیمینگ با گارانتی معتبر.',
     themeColor: '#4f46e5',
     buyButtonColor: '#4338ca',
-    totalSales: 210000000,
+    totalSales: 450000000,
     shippingFee: 45000,
     defaultCurrency: Currency.IRR,
     categories: DEFAULT_FULL_CATS,
+    trustScore: 4.8,
+    avgResponseTimeMinutes: 24,
+    deliverySuccessCount: 1420,
+    reviews: MOCK_REVIEWS,
     products: [
-      { id: 'p1', name: 'هندزفری سونی XM5', description: 'حذف نویز فعال فوق‌العاده.', price: 15800000, discountPrice: 14200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600', category: 'موبایل و تبلت', salesCount: 45, stock: 10, rating: 4.9, reviewCount: 12, isFeatured: true, shippingMethod: 'post' },
-      { id: 'p2', name: 'کیبورد مکانیکال Razer', description: 'سوییچ‌های زرد بی‌صدا.', price: 6500000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 22, stock: 5, rating: 4.2, reviewCount: 8, shippingMethod: 'post' },
-      { id: 'p3', name: 'ساعت هوشمند Amazfit', description: 'باتری با دوام ۲۱ روزه.', price: 4200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=600', category: 'ساعت و اکسسوری', salesCount: 88, stock: 15, rating: 4.6, reviewCount: 34, shippingMethod: 'post' },
-      { id: 'p4', name: 'پاوربانک ۲۰۰۰۰ شیائومی', description: 'شارژ سریع ۲۲.۵ وات.', price: 1350000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1609592806457-482a1e1d643f?w=600', category: 'موبایل و تبلت', salesCount: 150, stock: 40, rating: 3.5, reviewCount: 56, shippingMethod: 'post' },
-      { id: 'p5', name: 'مانیتور ۲۷ اینچ گیمینگ', description: 'نرخ نوسازی ۱۶۵ هرتز.', price: 12500000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 10, stock: 3, rating: 4.8, reviewCount: 5, shippingMethod: 'post' },
-      { id: 'p6', name: 'ماوس لاجیتک MX Master', description: 'بهترین برای طراحان و برنامه‌نویسان.', price: 5900000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 30, stock: 12, rating: 4.9, reviewCount: 19, shippingMethod: 'post' },
-      { id: 'p7', name: 'کابل شارژ تایپ سی انکر', description: 'بسیار مقاوم و با کیفیت.', price: 450000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600', category: 'موبایل و تبلت', salesCount: 300, stock: 100, rating: 3.2, reviewCount: 80, shippingMethod: 'post' }
+      { id: 'p1', name: 'هندزفری سونی XM5', description: 'حذف نویز فعال فوق‌العاده و صدای شفاف.', price: 15800000, discountPrice: 14200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600', category: 'موبایل و تبلت', salesCount: 45, stock: 0, rating: 4.9, reviewCount: 12, viewCount: 450, isFeatured: true, shippingMethod: 'post' },
+      { id: 'p2', name: 'کیبورد Razer BlackWidow', description: 'سوییچ‌های مکانیکی زرد مخصوص گیمینگ.', price: 8500000, discountPrice: 7900000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 22, stock: 0, rating: 4.2, reviewCount: 8, viewCount: 850, notifyMeCount: 124, shippingMethod: 'post' },
+      { id: 'p3', name: 'ساعت هوشمند Amazfit GTR', description: 'نمایشگر AMOLED و باتری ۲۱ روزه.', price: 4200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=600', category: 'ساعت و اکسسوری', salesCount: 88, stock: 15, rating: 4.6, reviewCount: 34, viewCount: 610, shippingMethod: 'post' },
+      { id: 'p4', name: 'ماوس Logitech MX Master 3', description: 'بهترین انتخاب برای طراحان و برنامه‌نویسان.', price: 3400000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 15, stock: 5, rating: 4.8, reviewCount: 10, viewCount: 200, shippingMethod: 'post' },
+      { id: 'p5', name: 'هدست SteelSeries Arctis 7', description: 'صدای ۷.۱ کاناله وایرلس بدون تاخیر.', price: 7200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600', category: 'موبایل و تبلت', salesCount: 30, stock: 12, rating: 4.7, reviewCount: 15, viewCount: 340, shippingMethod: 'post' },
+      { id: 'p6', name: 'شارژر وایرلس سامسونگ', description: 'شارژ سریع ۱۵ وات با فن خنک‌کننده.', price: 1200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1615526675159-e248c3021d3f?w=600', category: 'موبایل و تبلت', salesCount: 110, stock: 40, rating: 4.5, reviewCount: 50, viewCount: 1200, shippingMethod: 'post' },
+      { id: 'p7', name: 'پاوربانک شیائومی ۲۰۰۰۰', description: 'نسخه ۳ با خروجی ۱۸ وات.', price: 950000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1609592806457-41e97686522c?w=600', category: 'موبایل و تبلت', salesCount: 200, stock: 80, rating: 4.4, reviewCount: 95, viewCount: 3000, shippingMethod: 'post' },
+      { id: 'p8', name: 'اسپیکر JBL Flip 6', description: 'ضد آب با صدای بیس کوبنده.', price: 3800000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1589492477829-5e65395b66cc?w=600', category: 'عمومی', salesCount: 40, stock: 8, rating: 4.9, reviewCount: 22, viewCount: 550, shippingMethod: 'post' },
+      { id: 'p9', name: 'هارد اکسترنال WD 2TB', description: 'سری My Passport با امنیت بالا.', price: 2950000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1531492746076-1a1bd9b29fc0?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 65, stock: 20, rating: 4.6, reviewCount: 18, viewCount: 430, shippingMethod: 'post' },
+      { id: 'p10', name: 'دسته PS5 DualSense', description: 'تکنولوژی Haptic Feedback.', price: 3200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1605906302484-3c39f8bb1520?w=600', category: 'اسباب‌بازی و سرگرمی', salesCount: 55, stock: 15, rating: 4.8, reviewCount: 40, viewCount: 900, shippingMethod: 'post' },
+      { id: 'p11', name: 'وب‌کم Logitech C920', description: 'کیفیت Full HD 1080p.', price: 4100000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 12, stock: 4, rating: 4.7, reviewCount: 5, viewCount: 180, shippingMethod: 'post' },
+      { id: 'p12', name: 'مودم TP-Link Archer', description: 'دو بانده AC1200 با برد عالی.', price: 1850000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 28, stock: 10, rating: 4.3, reviewCount: 12, viewCount: 300, shippingMethod: 'post' },
+      { id: 'p13', name: 'کوله پشتی لپ‌تاپ Xiaomi', description: 'پارچه ضد آب و طراحی شیک.', price: 850000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600', category: 'ورزش و سفر', salesCount: 44, stock: 18, rating: 4.5, reviewCount: 20, viewCount: 420, shippingMethod: 'post' },
+      { id: 'p14', name: 'کابل HDMI 4K Anker', description: 'سرعت انتقال ۱۸ گیگابیت.', price: 450000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 150, stock: 100, rating: 4.9, reviewCount: 60, viewCount: 2100, shippingMethod: 'post' },
+      { id: 'p15', name: 'پنل نوری Nanoleaf', description: 'نورپردازی هوشمند محیط گیمینگ.', price: 11500000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600', category: 'لوازم دکوری', salesCount: 5, stock: 2, rating: 5.0, reviewCount: 2, viewCount: 500, shippingMethod: 'post' },
+      { id: 'p16', name: 'میکروفون Blue Yeti', description: 'بهترین کیفیت برای استریم و پادکست.', price: 8900000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 10, stock: 3, rating: 4.8, reviewCount: 4, viewCount: 240, shippingMethod: 'post' },
+      { id: 'p17', name: 'میز گیمینگ Eureka', description: 'سطح فیبر کربن با نگهدارنده لیوان.', price: 14200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1598550476439-6847785fce66?w=600', category: 'لوازم خانگی', salesCount: 3, stock: 1, rating: 4.9, reviewCount: 3, viewCount: 350, shippingMethod: 'post' },
+      { id: 'p18', name: 'لایت بار مانیتور BenQ', description: 'محافظت از چشم و نور عالی میز.', price: 5600000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1547119957-637f8679db1e?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 18, stock: 6, rating: 4.7, reviewCount: 8, viewCount: 410, shippingMethod: 'post' },
+      { id: 'p19', name: 'استند هدفون RGB', description: 'دارای ۲ پورت USB اضافی.', price: 780000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1616120621453-2946c1b3f7f4?w=600', category: 'ساعت و اکسسوری', salesCount: 35, stock: 14, rating: 4.4, reviewCount: 10, viewCount: 190, shippingMethod: 'post' },
+      { id: 'p20', name: 'فن خنک‌کننده مانیتور', description: 'نصب آسان پشت مانیتور.', price: 420000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600', category: 'لپ‌تاپ و کامپیوتر', salesCount: 12, stock: 50, rating: 4.1, reviewCount: 4, viewCount: 150, shippingMethod: 'post' },
     ],
-    orders: []
-  },
-  {
-    id: 'store_2',
-    ownerEmail: 'fashion@fastsell.ir',
-    slug: 'modern-style',
-    title: 'استایل مدرن',
-    bio: 'مجموعه‌ای از بهترین پوشاک فصل برای خوش‌پوش‌ها.',
-    themeColor: '#db2777',
-    buyButtonColor: '#be185d',
-    totalSales: 95000000,
-    shippingFee: 0,
-    defaultCurrency: Currency.IRR,
-    categories: DEFAULT_FULL_CATS,
-    products: [
-      { id: 'p8', name: 'هودی نخی مردانه', description: 'مناسب فصل پاییز، ۱۰۰٪ پنبه.', price: 850000, discountPrice: 690000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600', category: 'پوشاک مردانه', salesCount: 65, stock: 20, rating: 4.5, reviewCount: 22, isFeatured: true, shippingMethod: 'post' },
-      { id: 'p9', name: 'کفش ورزشی نایکی', description: 'سبک و راحت برای پیاده‌روی.', price: 3400000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600', category: 'ورزش و سفر', salesCount: 40, stock: 8, rating: 4.7, reviewCount: 15, shippingMethod: 'post' },
-      { id: 'p10', name: 'کیف دستی چرمی زنانه', description: 'چرم طبیعی با دوخت ظریف.', price: 1800000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600', category: 'پوشاک زنانه', salesCount: 12, stock: 4, rating: 4.8, reviewCount: 6, shippingMethod: 'post' },
-      { id: 'p11', name: 'تی‌شرت لانگ سفید', description: 'تن‌خور عالی و خنک.', price: 320000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600', category: 'پوشاک مردانه', salesCount: 200, stock: 50, rating: 3.9, reviewCount: 45, shippingMethod: 'post' },
-      { id: 'p12', name: 'شلوار جین تیره', description: 'پارچه ترک با ضمانت رنگ.', price: 1200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600', category: 'پوشاک مردانه', salesCount: 88, stock: 25, rating: 4.1, reviewCount: 30, shippingMethod: 'post' },
-      { id: 'p13', name: 'عینک آفتابی کلاسیک', description: 'عدسی پلاریزه با محافظت UV.', price: 2100000, discountPrice: 1850000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600', category: 'ساعت و اکسسوری', salesCount: 15, stock: 6, rating: 3.6, reviewCount: 4, shippingMethod: 'post' },
-      { id: 'p14', name: 'کلاه کپ اسپرت', description: 'بسیار شیک و با دوام.', price: 250000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1588850567047-1845a9ee02f6?w=600', category: 'پوشاک مردانه', salesCount: 50, stock: 30, rating: 4.0, reviewCount: 12, shippingMethod: 'post' }
-    ],
-    orders: []
-  },
-  {
-    id: 'store_3',
-    ownerEmail: 'home@fastsell.ir',
-    slug: 'home-art',
-    title: 'هنر و خانه',
-    bio: 'اکسسوری‌های خاص برای دکوراسیون داخلی منزل شما.',
-    themeColor: '#0f172a',
-    buyButtonColor: '#1e293b',
-    totalSales: 48000000,
-    shippingFee: 75000,
-    defaultCurrency: Currency.IRR,
-    categories: DEFAULT_FULL_CATS,
-    products: [
-      { id: 'p15', name: 'آباژور مینیمال چوبی', description: 'نور ملایم برای اتاق خواب.', price: 950000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600', category: 'لوازم دکوری', salesCount: 20, stock: 7, rating: 4.6, reviewCount: 11, shippingMethod: 'post' },
-      { id: 'p16', name: 'گلدان سرامیکی دست‌ساز', description: 'طراحی منحصر به فرد.', price: 420000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=600', category: 'لوازم دکوری', salesCount: 35, stock: 15, rating: 4.4, reviewCount: 9, shippingMethod: 'post' },
-      { id: 'p17', name: 'تابلو دکوراتور مدرن', description: 'چاپ بوم با کیفیت عالی.', price: 1500000, discountPrice: 1200000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600', category: 'لوازم دکوری', salesCount: 8, stock: 4, rating: 4.3, reviewCount: 3, shippingMethod: 'post' },
-      { id: 'p18', name: 'قهوه‌ساز کوچک خانگی', description: 'آماده‌سازی قهوه در ۳ دقیقه.', price: 3800000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=600', category: 'لوازم خانگی', salesCount: 14, stock: 2, rating: 4.7, reviewCount: 5, shippingMethod: 'post' },
-      { id: 'p19', name: 'شمع معطر اسطوخودوس', description: 'آرامش‌بخش و خوشبو.', price: 180000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1596435707700-626456093193?w=600', category: 'لوازم دکوری', salesCount: 120, stock: 200, rating: 4.1, reviewCount: 40, shippingMethod: 'post' },
-      { id: 'p20', name: 'کوسن مبل فانتزی', description: 'پارچه مخمل نرم.', price: 290000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600', category: 'لوازم دکوری', salesCount: 50, stock: 30, rating: 3.8, reviewCount: 15, shippingMethod: 'post' },
-      { id: 'p21', name: 'ست جای ادویه پیرکس', description: 'مقاوم و شفاف.', price: 550000, currency: Currency.IRR, image: 'https://images.unsplash.com/photo-1584990344321-27682ad0f1f7?w=600', category: 'لوازم خانگی', salesCount: 22, stock: 10, rating: 4.2, reviewCount: 7, shippingMethod: 'post' }
-    ],
-    orders: []
+    orders: generateMockOrders('digital-hub', 30)
   }
 ];

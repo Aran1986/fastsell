@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { SalesLink, AppUser, Order } from '../../types';
+import { SalesLink, AppUser } from '../../types';
 import { FinanceService } from '../../services/financeService';
 import { BUSINESS_RULES } from '../../constants/businessRules';
 
@@ -47,11 +47,6 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ activeLink, allUsers, allStores
                  >
                    درخواست تسویه حساب
                  </button>
-                 {totalEarnings < BUSINESS_RULES.MIN_WITHDRAWAL_AMOUNT && (
-                   <p className="text-[9px] text-center font-bold text-orange-400 italic">
-                     حداقل مبلغ جهت برداشت {BUSINESS_RULES.MIN_WITHDRAWAL_AMOUNT.toLocaleString()} تومان می‌باشد.
-                   </p>
-                 )}
               </div>
            </div>
         </div>
@@ -69,41 +64,43 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ activeLink, allUsers, allStores
         </div>
       </div>
 
-      {/* Scoring Detail */}
-      <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm">
-         <h4 className="text-xl font-black text-slate-900 mb-8">تحلیل امتیاز فعالیت (Score: {scoreData.total.toFixed(1)})</h4>
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-4">
-               <div className="flex justify-between items-center text-xs font-black text-slate-400">
-                  <span>محصولات فعال</span>
-                  <span>{scoreData.breakdown.productPoints} / {BUSINESS_RULES.SCORE_MAX_PRODUCT_POINTS}</span>
-               </div>
-               <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500" style={{ width: `${(scoreData.breakdown.productPoints / BUSINESS_RULES.SCORE_MAX_PRODUCT_POINTS) * 100}%` }}></div>
-               </div>
+      <div className="grid grid-cols-1 gap-6">
+          {/* Scoring Detail */}
+          <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm">
+            <h4 className="text-xl font-black text-slate-900 mb-8">تحلیل امتیاز فعالیت (Score: {scoreData.total.toFixed(1)})</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs font-black text-slate-400">
+                      <span>محصولات فعال</span>
+                      <span>{scoreData.breakdown.productPoints} / {BUSINESS_RULES.SCORE_MAX_PRODUCT_POINTS}</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-indigo-500" style={{ width: `${(scoreData.breakdown.productPoints / BUSINESS_RULES.SCORE_MAX_PRODUCT_POINTS) * 100}%` }}></div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs font-black text-slate-400">
+                      <span>حجم فروش</span>
+                      <span>{scoreData.breakdown.salesPoints.toFixed(1)} امتیاز</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 w-full opacity-50"></div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs font-black text-slate-400">
+                      <span>معرفی فروشنده</span>
+                      <span>{scoreData.breakdown.activeReferralPoints} امتیاز</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-orange-500 w-full opacity-50"></div>
+                  </div>
+                </div>
             </div>
-            <div className="space-y-4">
-               <div className="flex justify-between items-center text-xs font-black text-slate-400">
-                  <span>حجم فروش</span>
-                  <span>{scoreData.breakdown.salesPoints.toFixed(1)} امتیاز</span>
-               </div>
-               <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 w-full opacity-50"></div>
-               </div>
-            </div>
-            <div className="space-y-4">
-               <div className="flex justify-between items-center text-xs font-black text-slate-400">
-                  <span>معرفی فروشنده</span>
-                  <span>{scoreData.breakdown.activeReferralPoints} امتیاز</span>
-               </div>
-               <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-orange-500 w-full opacity-50"></div>
-               </div>
-            </div>
-         </div>
-         <div className="mt-10 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] font-bold text-slate-500 leading-relaxed">
-           هر چه امتیاز شما نسبت به کل سیستم بیشتر باشد، سهم بیشتری از "استخر سود فروشندگان موسس" دریافت خواهید کرد. این امتیاز در پایان هر ماه ریست می‌شود.
-         </div>
+            <p className="mt-8 text-[10px] text-slate-400 font-bold leading-relaxed">
+               نکته: امتیاز شما بر اساس فعالیت ۳۰ روز اخیر محاسبه می‌شود و سهم شما از استخر سود کل پلتفرم را تعیین می‌کند.
+            </p>
+          </div>
       </div>
     </div>
   );
