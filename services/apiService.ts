@@ -1,5 +1,5 @@
 
-import { SalesLink, Product, Order, Currency, AppUser } from '../types';
+import { SalesLink, Product, Order, Currency, AppUser, Review } from '../types';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { INITIAL_STORES } from '../constants/mockData';
 
@@ -40,7 +40,32 @@ export const ApiService = {
     localStorage.setItem(LOCAL_STORES_KEY, JSON.stringify(stores));
   },
 
-  /** Find the last order details for a specific email or phone to auto-fill checkout */
+  async verifyPurchase(identifier: string, productId: string): Promise<boolean> {
+    const stores = await this.getAllStores();
+    let hasPurchased = false;
+    stores.forEach(s => {
+      if (s.orders?.some(o => (o.customerEmail === identifier || o.customerPhone === identifier) && o.productId === productId)) {
+        hasPurchased = true;
+      }
+    });
+    return hasPurchased;
+  },
+
+  async addReview(storeSlug: string, review: Omit<Review, 'id' | 'date'>): Promise<void> {
+    const stores = this.getLocalStores();
+    const store = stores.find(s => s.slug === storeSlug);
+    if (store) {
+      if (!store.reviews) store.reviews = [];
+      const newReview: Review = {
+        ...review,
+        id: 'rev_' + Math.random().toString(36).substr(2, 9),
+        date: new Date().toISOString()
+      };
+      store.reviews.push(newReview);
+      this.saveLocalStores(stores);
+    }
+  },
+
   async getLastCustomerDetails(identifier: string) {
     const stores = await this.getAllStores();
     let allOrders: Order[] = [];
@@ -55,16 +80,12 @@ export const ApiService = {
     const stores = await this.getAllStores();
     const currentStore = stores.find(s => s.slug === currentStoreSlug);
     const results: any[] = [];
-
-    // Prioritize products from the same store
     if (currentStore) {
       currentStore.products
         .filter(p => p.id !== currentProductId && p.stock > 0)
         .slice(0, 2)
-        .forEach(p => results.push({ ...p, storeSlug: currentStore.slug, shippingFee: 0 })); // Same store = no extra shipping
+        .forEach(p => results.push({ ...p, storeSlug: currentStore.slug, shippingFee: 0 }));
     }
-
-    // Add some from other stores if needed
     if (results.length < 2) {
       stores.filter(s => s.slug !== currentStoreSlug).forEach(s => {
         s.products.filter(p => p.stock > 0).slice(0, 1).forEach(p => {
@@ -72,7 +93,6 @@ export const ApiService = {
         });
       });
     }
-
     return results.slice(0, 2);
   },
 

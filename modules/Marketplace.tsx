@@ -264,10 +264,10 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
                          <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={p.name} />
                          <div className="absolute top-4 right-4 lg:top-6 lg:right-6 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[9px] font-black shadow-sm border border-slate-100" style={{ color: p.storeColor }}>{p.storeName}</div>
                          
-                         {/* Product Actions - Floating */}
-                         <div className="absolute bottom-18 right-6 flex flex-col gap-2 opacity-0 lg:group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0">
-                             <button onClick={(e) => { e.stopPropagation(); smartMarketSearch(p); }} title="تحلیل قیمت" className="w-10 h-10 rounded-xl bg-white/90 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white shadow-lg transition-all"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
-                             <button onClick={(e) => { e.stopPropagation(); toggleCompare(p); }} title="افزودن به مقایسه" className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all ${isCompared ? 'bg-indigo-600 text-white rotate-45' : 'bg-white/90 text-slate-400 hover:text-indigo-600'}`}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg></button>
+                         {/* Product Actions - Fixed visibility issues */}
+                         <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-20 transition-all transform lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-4 lg:group-hover:translate-y-0">
+                             <button onClick={(e) => { e.stopPropagation(); smartMarketSearch(p); }} title="تحلیل قیمت" className="w-10 h-10 rounded-xl bg-white/90 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white shadow-lg transition-all border border-slate-100"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
+                             <button onClick={(e) => { e.stopPropagation(); toggleCompare(p); }} title="افزودن به مقایسه" className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all border border-slate-100 ${isCompared ? 'bg-indigo-600 text-white rotate-45' : 'bg-white/90 text-slate-400 hover:text-indigo-600'}`}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg></button>
                          </div>
 
                          <div className="absolute bottom-4 left-4 lg:bottom-6 lg:left-6 bg-black/60 backdrop-blur text-white text-[10px] px-3 py-1.5 rounded-xl flex items-center gap-2 font-black">⭐ {p.rating} <span className="opacity-60 text-[8px] font-bold">({p.reviewCount})</span></div>
@@ -279,7 +279,10 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
                             <p className="text-[11px] text-slate-400 font-bold line-clamp-1">{p.category}</p>
                          </div>
                          <div className="mt-6 lg:mt-8 flex items-center justify-between">
-                            <div className="flex flex-col">{hasDiscount && <span className="text-xs text-slate-300 line-through font-bold mb-1">{p.price.toLocaleString()}</span>}<span className="font-black text-slate-900 text-lg">{(p.discountPrice || p.price).toLocaleString()} <span className="text-[10px] text-slate-400 font-bold">تومان</span></span></div>
+                            <div className="flex flex-col">
+                                {hasDiscount && <span className="text-xs text-orange-500 line-through font-black mb-1">{p.price.toLocaleString()}</span>}
+                                <span className="font-black text-slate-900 text-lg">{(p.discountPrice || p.price).toLocaleString()} <span className="text-[10px] text-slate-400 font-bold">تومان</span></span>
+                            </div>
                             <div className="flex gap-2">
                                {isOutOfStock ? (
                                    <button onClick={(e) => handleNotifyMe(e, p.storeSlug, p.id)} className={`px-4 lg:px-5 py-3 rounded-2xl text-[10px] font-black transition-all ${notifiedProds.has(p.id) ? 'bg-green-100 text-green-600' : 'bg-slate-900 text-white hover:bg-indigo-600'}`}>{notifiedProds.has(p.id) ? 'ثبت شد ✓' : 'خبرم کن'}</button>

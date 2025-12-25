@@ -147,7 +147,13 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
          <h2 className="text-xl font-black mb-8">فاکتور سفارش</h2>
          <div className="space-y-4 mb-8">
             <div className="bg-white p-6 rounded-[2rem] border border-slate-100 space-y-3 shadow-sm">
-               <div className="flex justify-between text-sm font-black text-slate-800"><span>{product.name}</span><span>{(product.discountPrice || product.price).toLocaleString()}</span></div>
+               <div className="flex justify-between text-sm font-black text-slate-800">
+                  <span>{product.name}</span>
+                  <div className="flex flex-col items-end">
+                    {product.discountPrice && <span className="text-[10px] text-orange-500 line-through font-black">{(product.price).toLocaleString()}</span>}
+                    <span>{(product.discountPrice || product.price).toLocaleString()}</span>
+                  </div>
+               </div>
                <div className="flex justify-between text-[10px] font-bold text-slate-400"><span>هزینه ارسال</span><span>{shippingFee.toLocaleString()}</span></div>
             </div>
             {includeBundle && bundleProduct && (

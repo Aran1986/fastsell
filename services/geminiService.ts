@@ -35,3 +35,20 @@ export const summarizeReviews = async (reviews: string[]): Promise<string> => {
     return "تحلیل نظرات در حال حاضر مقدور نیست.";
   }
 };
+
+export const checkReviewSpam = async (text: string): Promise<{ isSpam: boolean; reason?: string }> => {
+  const ai = getAI();
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `آیا متن زیر یک نظر اسپم، توهین‌آمیز، تبلیغاتی یا کاملاً بی‌ربط به خرید محصول است؟ پاسخ را فقط به صورت JSON با ساختار {"isSpam": boolean, "reason": "علت به فارسی"} برگردانید. متن نظر: "${text}"`,
+      config: { 
+        responseMimeType: "application/json",
+        temperature: 0.1 
+      }
+    });
+    return JSON.parse(response.text || '{"isSpam": false}');
+  } catch (e) {
+    return { isSpam: false }; // در صورت خطا، سخت‌گیری نمی‌کنیم
+  }
+};

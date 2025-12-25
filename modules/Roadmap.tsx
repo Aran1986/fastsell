@@ -22,7 +22,8 @@ const Roadmap: React.FC = () => {
         { text: 'رتبه‌بندی هوشمند محصولات (Smart Ranking) بر اساس Discovery Score', status: 'done' },
         { text: 'سیستم امتیاز اعتبار (Reputation Points) برای فروشندگان', status: 'done' },
         { text: 'داشبورد قدرت فروشنده (Seller Power) جهت پایش Boost خودکار', status: 'done' },
-        { text: 'ماژول مقایسه و تحلیل قیمت رقبا (Smart Comparison Module)', status: 'done' }
+        { text: 'ماژول مقایسه و تحلیل قیمت رقبا (Smart Comparison Module)', status: 'done' },
+        { text: 'سیستم آنتی‌اسپم هوشمند نظرات با Gemini AI', status: 'done' }
       ]
     },
     {
@@ -31,7 +32,7 @@ const Roadmap: React.FC = () => {
         { text: 'اصلاح لاگین ادمین (Admin Hardcoded Login) - باید با سیستم Auth واقعی جایگزین شود', status: 'debt' },
         { text: 'ذخیره‌سازی لوکال به Supabase - در حال حاضر بخشی از دیتاها فقط در localStorage هستند', status: 'debt' },
         { text: 'بهینه‌سازی سایز تصاویر محصولات در آپلود', status: 'debt' },
-        { text: 'محدود کردن فیچر مقایسه قیمت به پلن‌های خاص (Pro / Max / Max+) در آینده', status: 'debt' }
+        { text: 'محدود کردن فیچر مقایسه قیمت به پلن‌های خاص (Pro / Max / Max+) - در حال حاضر برای همه باز است', status: 'debt' }
       ]
     },
     {
