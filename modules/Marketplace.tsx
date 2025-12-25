@@ -46,6 +46,10 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
     setLinks(all);
   };
 
+  useEffect(() => {
+    refreshData();
+  }, []);
+
   const allProducts = useMemo(() => {
     const products: (Product & { storeSlug: string; storeName: string; storeColor: string; createdAt: string; smartScore: number })[] = [];
     links.forEach(link => {
@@ -178,7 +182,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 w-full">
         <div className="flex flex-col lg:flex-row gap-8">
-           {/* Desktop Sidebar */}
+           {/* Desktop Sidebar - Keeping it clean */}
            <aside className="hidden lg:block lg:w-80 space-y-6">
               <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm sticky top-28">
                  <h3 className="text-sm font-black text-slate-900 mb-8 border-b border-slate-50 pb-4">فیلترهای هوشمند</h3>
@@ -226,8 +230,8 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
               </div>
            </aside>
 
-           {/* Products Area */}
-           <div className="flex-1 space-y-6">
+           {/* Products Area - Fixed layout */}
+           <div className="flex-1 space-y-8">
               <div className="flex flex-col sm:flex-row justify-between items-center bg-white px-8 py-6 rounded-[2.5rem] border border-slate-200 gap-4 shadow-sm">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{filteredProducts.length} مورد بر اساس رتبه‌بندی هوشمند</span>
@@ -245,7 +249,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
                   </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                 {filteredProducts.map(p => {
                   const hasDiscount = !!p.discountPrice;
                   const isOutOfStock = p.stock <= 0;
@@ -255,43 +259,31 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
                     <div 
                       key={`${p.storeSlug}-${p.id}`} 
                       onClick={() => !isOutOfStock && setSelectedCheckoutProduct({slug: p.storeSlug, id: p.id})}
-                      className="group bg-white rounded-[3rem] lg:rounded-[3.5rem] overflow-hidden border border-slate-100 hover:shadow-2xl transition-all duration-500 flex flex-col relative cursor-pointer"
+                      className="group bg-white rounded-[3.5rem] overflow-hidden border border-slate-100 hover:shadow-2xl transition-all duration-500 flex flex-col relative cursor-pointer"
                     >
-                      <div className={`absolute top-4 left-4 lg:top-6 lg:left-6 z-10 text-[9px] font-black px-3 py-1.5 rounded-full shadow-lg border border-white/50 backdrop-blur-md ${isOutOfStock ? 'bg-red-500 text-white' : 'bg-white/90 text-slate-900'}`}>
-                        {isOutOfStock ? 'اتمام موجودی' : `موجودی: ${p.stock}`}
-                      </div>
-                      <div className="h-56 lg:h-64 overflow-hidden relative">
+                      <div className="h-64 overflow-hidden relative">
                          <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={p.name} />
-                         <div className="absolute top-4 right-4 lg:top-6 lg:right-6 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[9px] font-black shadow-sm border border-slate-100" style={{ color: p.storeColor }}>{p.storeName}</div>
+                         <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[9px] font-black shadow-sm" style={{ color: p.storeColor }}>{p.storeName}</div>
                          
-                         {/* Product Actions - Fixed visibility issues */}
-                         <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-20 transition-all transform lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-4 lg:group-hover:translate-y-0">
-                             <button onClick={(e) => { e.stopPropagation(); smartMarketSearch(p); }} title="تحلیل قیمت" className="w-10 h-10 rounded-xl bg-white/90 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white shadow-lg transition-all border border-slate-100"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
-                             <button onClick={(e) => { e.stopPropagation(); toggleCompare(p); }} title="افزودن به مقایسه" className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all border border-slate-100 ${isCompared ? 'bg-indigo-600 text-white rotate-45' : 'bg-white/90 text-slate-400 hover:text-indigo-600'}`}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg></button>
+                         {/* Product Actions */}
+                         <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-20">
+                             <button onClick={(e) => { e.stopPropagation(); smartMarketSearch(p); }} className="w-10 h-10 rounded-xl bg-white/90 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white shadow-lg transition-all border border-slate-100"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
                          </div>
 
-                         <div className="absolute bottom-4 left-4 lg:bottom-6 lg:left-6 bg-black/60 backdrop-blur text-white text-[10px] px-3 py-1.5 rounded-xl flex items-center gap-2 font-black">⭐ {p.rating} <span className="opacity-60 text-[8px] font-bold">({p.reviewCount})</span></div>
+                         <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur text-white text-[10px] px-3 py-1.5 rounded-xl flex items-center gap-2 font-black">⭐ {p.rating}</div>
                       </div>
 
-                      <div className="p-6 lg:p-8 flex-1 flex flex-col justify-between">
+                      <div className="p-8 flex-1 flex flex-col justify-between">
                          <div>
-                            <h3 className="text-lg lg:text-xl font-black text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">{p.name}</h3>
-                            <p className="text-[11px] text-slate-400 font-bold line-clamp-1">{p.category}</p>
+                            <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">{p.name}</h3>
+                            <p className="text-[11px] text-slate-400 font-bold">{p.category}</p>
                          </div>
-                         <div className="mt-6 lg:mt-8 flex items-center justify-between">
+                         <div className="mt-8 flex items-center justify-between">
                             <div className="flex flex-col">
                                 {hasDiscount && <span className="text-xs text-orange-500 line-through font-black mb-1">{p.price.toLocaleString()}</span>}
                                 <span className="font-black text-slate-900 text-lg">{(p.discountPrice || p.price).toLocaleString()} <span className="text-[10px] text-slate-400 font-bold">تومان</span></span>
                             </div>
-                            <div className="flex gap-2">
-                               {isOutOfStock ? (
-                                   <button onClick={(e) => handleNotifyMe(e, p.storeSlug, p.id)} className={`px-4 lg:px-5 py-3 rounded-2xl text-[10px] font-black transition-all ${notifiedProds.has(p.id) ? 'bg-green-100 text-green-600' : 'bg-slate-900 text-white hover:bg-indigo-600'}`}>{notifiedProds.has(p.id) ? 'ثبت شد ✓' : 'خبرم کن'}</button>
-                               ) : (
-                                   <button onClick={(e) => handleOpenChat(e, p.storeSlug, p.storeName)} className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-inner text-xl">
-                                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                   </button>
-                               )}
-                            </div>
+                            <button className="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black">خرید سریع</button>
                          </div>
                       </div>
                     </div>
@@ -301,175 +293,6 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
            </div>
         </div>
       </main>
-
-      {/* Fixed Bottom Navigation for Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 z-[600] lg:hidden bg-white/80 backdrop-blur-xl border-t border-slate-200 px-4 py-3 flex justify-around items-center shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-[2.5rem]">
-         <button onClick={() => setMobileDrawerTab('filters')} className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all ${mobileDrawerTab === 'filters' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400'}`}>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-            <span className="text-[10px] font-black">فیلترها</span>
-         </button>
-         <button onClick={() => setMobileDrawerTab('categories')} className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all ${mobileDrawerTab === 'categories' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400'}`}>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
-            <span className="text-[10px] font-black">دسته‌ها</span>
-         </button>
-         <button onClick={() => setMobileDrawerTab('stores')} className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all ${mobileDrawerTab === 'stores' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400'}`}>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-            <span className="text-[10px] font-black">فروشگاه‌ها</span>
-         </button>
-      </div>
-
-      {/* Mobile Drawer (Bottom Sheet) */}
-      {mobileDrawerTab !== 'none' && (
-        <div className="fixed inset-0 z-[700] lg:hidden flex flex-col justify-end">
-           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMobileDrawerTab('none')}></div>
-           <div className="relative bg-white rounded-t-[3rem] p-8 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
-              <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8"></div>
-              
-              <div className="flex justify-between items-center mb-8">
-                 <h3 className="text-xl font-black text-slate-900">
-                    {mobileDrawerTab === 'filters' ? 'تنظیمات فیلتر' : mobileDrawerTab === 'categories' ? 'انتخاب دسته‌بندی' : 'جستجوی فروشگاه'}
-                 </h3>
-                 <button onClick={() => setMobileDrawerTab('none')} className="text-slate-300 hover:text-red-500 font-black text-2xl">×</button>
-              </div>
-
-              {mobileDrawerTab === 'filters' && (
-                <div className="space-y-8">
-                   <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">جستجوی سریع محصول</label>
-                      <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="مثلاً: هندزفری سونی..." className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none font-bold" />
-                   </div>
-                   <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">حداقل امتیاز فروشنده</label>
-                      <div className="flex gap-2">
-                         {[3, 4, 4.5].map(r => <button key={r} onClick={() => setMinRating(minRating === r ? 0 : r)} className={`flex-1 py-3 rounded-2xl text-[10px] font-black border transition-all ${minRating === r ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>{r}+ ⭐</button>)}
-                      </div>
-                   </div>
-                   <button onClick={() => setMobileDrawerTab('none')} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black shadow-xl">اعمال فیلترها</button>
-                </div>
-              )}
-
-              {mobileDrawerTab === 'categories' && (
-                <div className="grid grid-cols-2 gap-3">
-                   {categories.map(cat => (
-                     <button 
-                        key={cat} 
-                        onClick={() => { setActiveCategory(cat); setMobileDrawerTab('none'); }} 
-                        className={`text-right px-6 py-4 rounded-2xl text-xs font-bold transition-all border ${activeCategory === cat ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-slate-50 text-slate-500 border-slate-100'}`}
-                     >
-                        {cat}
-                     </button>
-                   ))}
-                </div>
-              )}
-
-              {mobileDrawerTab === 'stores' && (
-                <div className="space-y-6">
-                   <div className="relative">
-                      <input type="text" placeholder="نام فروشگاه را بنویسید..." value={storeSearch} onChange={(e) => setStoreSearch(e.target.value)} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none font-bold text-xs" />
-                   </div>
-                   <div className="grid grid-cols-1 gap-3">
-                      {storeSearch.trim() ? filteredStoreList.map(s => (
-                        <button key={s.slug} onClick={() => { setSelectedStoreSlug(s.slug); setMobileDrawerTab('none'); }} className="w-full p-5 flex items-center gap-4 bg-slate-50 rounded-2xl text-right group">
-                           <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-xs" style={{ backgroundColor: s.themeColor }}>{s.title.charAt(0)}</div>
-                           <div className="flex-1">
-                              <div className="text-sm font-black text-slate-800">{s.title}</div>
-                              <div className="text-[10px] text-slate-400 font-mono" dir="ltr">/s/{s.slug}</div>
-                           </div>
-                        </button>
-                      )) : topRatedStores.map(s => (
-                        <button key={s.slug} onClick={() => { setSelectedStoreSlug(s.slug); setMobileDrawerTab('none'); }} className="w-full p-5 flex items-center gap-4 bg-slate-50 rounded-2xl text-right group">
-                           <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-xs" style={{ backgroundColor: s.themeColor }}>{s.title.charAt(0)}</div>
-                           <div className="flex-1">
-                              <div className="text-sm font-black text-slate-800">{s.title}</div>
-                              <div className="text-[10px] text-slate-400 font-bold">⭐ {s.trustScore} امتیاز اعتبار</div>
-                           </div>
-                        </button>
-                      ))}
-                   </div>
-                   {selectedStoreSlug !== 'همه' && (
-                     <button onClick={() => { setSelectedStoreSlug('همه'); setMobileDrawerTab('none'); }} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-black text-xs">حذف فیلتر فروشگاه</button>
-                   )}
-                </div>
-              )}
-           </div>
-        </div>
-      )}
-
-      {/* Checkout Modal Overlay */}
-      {selectedCheckoutProduct && (
-        <div className="fixed inset-0 z-[1000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in" onClick={() => setSelectedCheckoutProduct(null)}>
-           <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[3rem] lg:rounded-[4rem] shadow-2xl overflow-hidden relative flex flex-col" onClick={e => e.stopPropagation()}>
-              <button onClick={() => setSelectedCheckoutProduct(null)} className="absolute top-6 left-6 lg:top-8 lg:left-8 z-[1010] w-10 h-10 lg:w-12 lg:h-12 bg-white/10 backdrop-blur text-slate-500 rounded-full flex items-center justify-center text-2xl lg:text-3xl font-black hover:text-red-500 hover:bg-white shadow-xl transition-all">×</button>
-              <div className="flex-1 overflow-y-auto">
-                 <Checkout links={links} onSaleSuccess={async (slug, pid, amt, data) => {
-                    await ApiService.createOrder(slug, {
-                      productId: pid,
-                      productName: links.find(l => l.slug === slug)?.products.find(p => p.id === pid)?.name || 'Product',
-                      amount: amt,
-                      shippingFee: data.shippingFee,
-                      totalPaid: data.totalPaid,
-                      currency: Currency.IRR,
-                      customerEmail: data.email,
-                      customerPhone: data.phone,
-                      customerAddress: data.address,
-                      customerPostalCode: data.postalCode,
-                      selectedVariants: data.selectedVariants,
-                      transactionHash: data.transactionHash,
-                      source: data.source
-                    });
-                    await refreshData();
-                    setSelectedCheckoutProduct(null);
-                 }} initialProductId={selectedCheckoutProduct.id} initialStoreSlug={selectedCheckoutProduct.slug} />
-              </div>
-           </div>
-        </div>
-      )}
-
-      {/* Seller Chat Modal */}
-      {isChatOpen && activeChatSeller && (
-        <div className="fixed inset-0 z-[1100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsChatOpen(false)}>
-           <div className="bg-white rounded-[3rem] w-full max-w-md h-[550px] lg:h-[600px] shadow-2xl flex flex-col border border-slate-100 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-              <div className="p-6 lg:p-8 bg-indigo-600 text-white rounded-t-[3rem] flex justify-between items-center">
-                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl lg:text-2xl font-black">🏪</div>
-                    <div>
-                       <div className="text-sm font-black">{activeChatSeller.title}</div>
-                       <div className="text-[10px] opacity-70">پاسخگوی سوالات شما هستیم</div>
-                    </div>
-                 </div>
-                 <button onClick={() => setIsChatOpen(false)} className="text-2xl lg:text-3xl font-black hover:scale-110 transition-transform">×</button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-4 bg-slate-50/50">
-                 <div className="p-4 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-2xl text-center border border-indigo-100">سوال خود را بپرسید؛ فروشنده در اسرع وقت پاسخ خواهد داد.</div>
-                 {chatMessages.map(m => (
-                   <div key={m.id} className={`flex ${m.sender === 'buyer' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`p-4 rounded-2xl text-[11px] font-bold max-w-[85%] shadow-sm ${m.sender === 'buyer' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'}`}>{m.text}</div>
-                   </div>
-                 ))}
-              </div>
-              <div className="p-4 lg:p-6 border-t border-slate-100 flex gap-3">
-                 <input type="text" value={userMsg} onChange={e => setUserMsg(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSendChat()} placeholder="سوال شما از فروشنده..." className="flex-1 bg-slate-100 px-5 lg:px-6 py-3 lg:py-4 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-100 transition-all" />
-                 <button onClick={handleSendChat} className="bg-indigo-600 text-white w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-all text-xl">🚀</button>
-              </div>
-           </div>
-        </div>
-      )}
-
-      {/* Floating Compare Bar */}
-      {compareList.length > 0 && (
-        <div className="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[500] bg-slate-900 text-white rounded-[2.5rem] p-4 flex items-center gap-6 shadow-2xl animate-in slide-in-from-bottom-10 w-[90%] max-w-lg">
-           <div className="flex -space-x-4 space-x-reverse items-center pr-4">
-              {compareList.map(item => <div key={item.id} className="w-10 h-10 lg:w-12 lg:h-12 rounded-full border-4 border-slate-900 overflow-hidden bg-white"><img src={item.image} className="w-full h-full object-cover" alt="" /></div>)}
-              {compareList.length < 2 && <div className="text-[10px] font-bold text-slate-400 mr-8">حداقل ۲ مورد</div>}
-           </div>
-           <div className="flex items-center gap-3">
-              <button onClick={() => setIsComparisonOpen(true)} disabled={compareList.length < 2} className={`px-6 lg:px-8 py-2.5 lg:py-3 rounded-2xl text-xs font-black transition-all ${compareList.length >= 2 ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-800 text-slate-600'}`}>تحلیل هوشمند ({compareList.length})</button>
-              <button onClick={() => setCompareList([])} className="text-slate-500 hover:text-white font-black text-[10px] px-2">پاک</button>
-           </div>
-        </div>
-      )}
-
-      {isComparisonOpen && <Comparison items={compareList} onClose={() => setIsComparisonOpen(false)} onRemove={(id) => { const newList = compareList.filter(item => item.id !== id); setCompareList(newList); if (newList.length === 0) setIsComparisonOpen(false); }} />}
     </div>
   );
 };
