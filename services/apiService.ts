@@ -76,15 +76,30 @@ export const ApiService = {
       return saved ? JSON.parse(saved) : INITIAL_STORES;
     }
     try {
+      // Fetch everything linked to stores
       const { data: stores, error } = await supabase
         .from('stores')
-        .select('*, products(*), orders(*), reviews(*)');
+        .select(`
+          *,
+          products(*),
+          orders(*),
+          reviews(*)
+        `);
       
-      if (error) throw error;
-      return (stores || []).map(s => this.mapStoreData(s, s.products || [], s.orders || [], s.reviews || []));
+      if (error) {
+        console.error("Supabase fetch error:", error);
+        throw error;
+      }
+      
+      // If DB is empty, optionally return initial mock stores for demo
+      if (!stores || stores.length === 0) {
+        return INITIAL_STORES;
+      }
+
+      return stores.map(s => this.mapStoreData(s, s.products || [], s.orders || [], s.reviews || []));
     } catch (e) {
       console.error("Fetch Stores Error:", e);
-      return [];
+      return INITIAL_STORES; // Return mock data if DB fails to prevent blank UI
     }
   },
 
@@ -99,7 +114,6 @@ export const ApiService = {
       return updatedStore.id;
     }
 
-    // FIX: Using correct camelCase properties from SalesLink interface to map to snake_case DB columns
     const dbData = {
       owner_email: store.ownerEmail,
       slug: store.slug,
@@ -210,7 +224,12 @@ export const ApiService = {
       }
       return;
     }
+    
+    const { data: store } = await supabase.from('stores').select('id').eq('slug', storeSlug).single();
+    if (!store) throw new Error("Store not found");
+
     await supabase.from('reviews').insert([{
+      store_id: store.id,
       product_id: review.productId,
       customer_name: review.customerName,
       rating: review.rating,

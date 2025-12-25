@@ -3,7 +3,7 @@ import React from 'react';
 import Header from '../components/Header';
 
 const DatabaseSchema: React.FC = () => {
-  const sqlCode = `-- FASTSell Complete Database Schema (v2.1)
+  const sqlCode = `-- FASTSell Complete Database Schema (v2.2)
 -- این اسکریپت تمامی نیازهای پلتفرم شامل محصولات، سفارشات، نوتیفیکیشن، چت و نظرات را پوشش می‌دهد.
 
 -- ۰. حذف جداول قدیمی برای نصب تمیز
@@ -90,7 +90,7 @@ CREATE TABLE public.orders (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- ۵. جدول نوتیفیکیشن‌ها (درخواستی شما)
+-- ۵. جدول نوتیفیکیشن‌ها
 CREATE TABLE public.notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id TEXT REFERENCES public.users(identifier) ON DELETE CASCADE,
@@ -110,9 +110,10 @@ CREATE TABLE public.chat_sessions (
     last_message_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- ۷. جدول نظرات
+-- ۷. جدول نظرات (اصلاح شده با فیلد store_id)
 CREATE TABLE public.reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_id UUID REFERENCES public.stores(id) ON DELETE CASCADE,
     product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
     customer_name TEXT,
     rating INTEGER CHECK (rating >= 1 AND rating <= 5),
@@ -127,7 +128,8 @@ CREATE TABLE public.reviews (
         <div className="mb-12">
           <h1 className="text-4xl font-black text-slate-900 mb-4">مدیریت دیتابیس (Supabase SQL) 🗄️</h1>
           <div className="bg-red-50 border border-red-200 p-6 rounded-[2rem] text-red-800 font-bold text-xs leading-relaxed">
-            ⚠️ یادآوری: این اسکریپت شامل ۷ جدول کامل است. اجرای آن تمامی داده‌های قبلی را حذف و ساختار جدید را جایگزین می‌کند.
+            ⚠️ یادآوری: این اسکریپت شامل ۷ جدول کامل است. اجرای آن تمامی داده‌های قبلی را حذف و ساختار جدید را جایگزین می‌کند. 
+            پس از کپی، آن را در SQL Editor پنل Supabase خود اجرا کنید.
           </div>
         </div>
 
