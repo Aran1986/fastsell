@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SalesLink, Product, Currency } from '../types';
 import Header from '../components/Header';
+import Comparison from './Comparison';
 import { TrackingService } from '../services/trackingService';
 import { ReputationService } from '../services/reputationService';
 
@@ -22,6 +23,10 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
   const [onlyDiscounts, setOnlyDiscounts] = useState(false);
   const [sortBy, setSortBy] = useState<'smart' | 'newest' | 'priceAsc' | 'priceDesc' | 'popular'>('smart');
   const [notifiedProds, setNotifiedProds] = useState<Set<string>>(new Set());
+
+  // Comparison State
+  const [compareList, setCompareList] = useState<(Product & { storeName: string; storeColor: string; storeSlug: string })[]>([]);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const allProducts = useMemo(() => {
     const products: (Product & { storeSlug: string; storeName: string; storeColor: string; createdAt: string; smartScore: number })[] = [];
@@ -95,6 +100,36 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
     alert('درخواست شما ثبت شد. به محض موجود شدن کالا، اطلاع‌رسانی می‌شود.');
   };
 
+  const toggleCompare = (p: any) => {
+    const isSelected = compareList.find(item => item.id === p.id);
+    if (isSelected) {
+      setCompareList(compareList.filter(item => item.id !== p.id));
+    } else {
+      if (compareList.length >= 4) {
+        alert('حداکثر ۴ مورد را می‌توانید همزمان مقایسه کنید.');
+        return;
+      }
+      setCompareList([...compareList, p]);
+    }
+  };
+
+  /** فیچر هوشمند برای پیدا کردن رقبای یک کالا در سایر فروشگاه‌ها */
+  const smartMarketSearch = (p: any) => {
+    const similarItems = allProducts.filter(item => 
+      item.id !== p.id && 
+      (item.category === p.category || item.name.toLowerCase().includes(p.name.split(' ')[0].toLowerCase())) &&
+      item.stock > 0
+    ).slice(0, 3);
+
+    if (similarItems.length === 0) {
+      alert('کالای مشابهی در سایر فروشگاه‌ها یافت نشد.');
+      return;
+    }
+
+    setCompareList([p, ...similarItems]);
+    setIsComparisonOpen(true);
+  };
+
   const selectedStore = links.find(l => l.slug === selectedStoreSlug);
 
   return (
@@ -159,8 +194,8 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
                     </div>
 
                     <div>
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">جستجوی محصول</label>
-                       <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="نام کالا..." className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-bold outline-none" />
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">جستجوی محصول یا خدمت</label>
+                       <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="مثلاً: طراحی لوگو..." className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 outline-none font-bold" />
                     </div>
 
                     <div>
@@ -191,7 +226,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
            <div className="flex-1 space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-center bg-white px-8 py-6 rounded-[2.5rem] border border-slate-200 gap-4 shadow-sm">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{filteredProducts.length} کالا بر اساس رتبه‌بندی هوشمند</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{filteredProducts.length} مورد بر اساس رتبه‌بندی هوشمند</span>
                     {selectedStoreSlug !== 'همه' && <span className="text-[10px] font-bold text-indigo-500 mt-1">فروشگاه فعال: {selectedStore?.title}</span>}
                   </div>
                   <div className="flex items-center gap-3">
@@ -210,6 +245,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
                 {filteredProducts.map(p => {
                   const hasDiscount = !!p.discountPrice;
                   const isOutOfStock = p.stock <= 0;
+                  const isCompared = compareList.find(item => item.id === p.id);
                   
                   return (
                     <div key={`${p.storeSlug}-${p.id}`} className="group bg-white rounded-[3.5rem] overflow-hidden border border-slate-100 hover:shadow-2xl transition-all duration-500 flex flex-col relative">
@@ -220,6 +256,25 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
                       <div className="h-64 overflow-hidden relative">
                          <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={p.name} />
                          <div className="absolute top-6 right-6 bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[9px] font-black shadow-sm border border-slate-100" style={{ color: p.storeColor }}>{p.storeName}</div>
+                         
+                         {/* Market Search Action */}
+                         <button 
+                            onClick={() => smartMarketSearch(p)} 
+                            title="تحلیل قیمت در بازار"
+                            className="absolute bottom-18 right-6 w-10 h-10 rounded-xl bg-white/90 text-indigo-600 flex items-center justify-center transition-all hover:bg-indigo-600 hover:text-white shadow-lg"
+                         >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                         </button>
+
+                         {/* Compare Toggle */}
+                         <button 
+                            onClick={() => toggleCompare(p)} 
+                            title="افزودن به مقایسه"
+                            className={`absolute bottom-6 right-6 w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-lg ${isCompared ? 'bg-indigo-600 text-white rotate-45' : 'bg-white/90 text-slate-400 hover:text-indigo-600'}`}
+                         >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
+                         </button>
+
                          <div className="absolute bottom-6 left-6 bg-black/60 backdrop-blur text-white text-[10px] px-3 py-1.5 rounded-xl flex items-center gap-2 font-black">
                            ⭐ {p.rating} <span className="opacity-60 text-[8px] font-bold">({p.reviewCount})</span>
                          </div>
@@ -252,6 +307,44 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links }) => {
            </div>
         </div>
       </main>
+
+      {/* Floating Compare Bar */}
+      {compareList.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] bg-slate-900 text-white rounded-[2.5rem] p-4 flex items-center gap-6 shadow-2xl animate-in slide-in-from-bottom-10">
+           <div className="flex -space-x-4 space-x-reverse items-center pr-4">
+              {compareList.map(item => (
+                <div key={item.id} className="w-12 h-12 rounded-full border-4 border-slate-900 overflow-hidden bg-white">
+                  <img src={item.image} className="w-full h-full object-cover" alt="" />
+                </div>
+              ))}
+              {compareList.length < 2 && <div className="text-[10px] font-bold text-slate-400 mr-8">حداقل ۲ مورد را انتخاب کنید</div>}
+           </div>
+           
+           <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setIsComparisonOpen(true)}
+                disabled={compareList.length < 2}
+                className={`px-8 py-3 rounded-2xl text-xs font-black transition-all ${compareList.length >= 2 ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-800 text-slate-600'}`}
+              >
+                تحلیل هوشمند ({compareList.length})
+              </button>
+              <button onClick={() => setCompareList([])} className="text-slate-500 hover:text-white font-black text-[10px] px-4">پاکسازی</button>
+           </div>
+        </div>
+      )}
+
+      {/* Comparison Modal */}
+      {isComparisonOpen && (
+        <Comparison 
+          items={compareList} 
+          onClose={() => setIsComparisonOpen(false)} 
+          onRemove={(id) => {
+            const newList = compareList.filter(item => item.id !== id);
+            setCompareList(newList);
+            if (newList.length === 0) setIsComparisonOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };

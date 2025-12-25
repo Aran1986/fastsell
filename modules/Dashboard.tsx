@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SalesLink, Product, Currency, BankDetails, Order, AppUser } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,9 @@ import AffiliatePanel from './dashboard/AffiliatePanel';
 import FinanceHub from './dashboard/FinanceHub';
 import AnalyticsOverview from './dashboard/AnalyticsOverview';
 import SellerPower from './dashboard/SellerPower';
+import MiniCRM from './dashboard/MiniCRM';
+import MarketingManager from './dashboard/MarketingManager';
+import PromotionManager from './dashboard/PromotionManager';
 
 interface DashboardProps {
   links: SalesLink[];
@@ -36,7 +39,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   
   // States
   const [activeLinkId, setActiveLinkId] = useState<string | null>(links[links.length - 1]?.id || null);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions'>('products');
   const [localLinks, setLocalLinks] = useState<SalesLink[]>(links);
 
   useEffect(() => {
@@ -62,16 +65,21 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [allLinksForPurchases, currentUser.identifier]);
 
-  const outOfStockProducts = useMemo(() => {
-    if (!activeLink) return [];
-    return activeLink.products.filter(p => p.stock <= 0);
+  const outOfStockInfo = useMemo(() => {
+    if (!activeLink) return { count: 0, totalNotifies: 0 };
+    const oos = activeLink.products.filter(p => p.stock <= 0);
+    const notifies = oos.reduce((acc, p) => acc + (p.notifyMeCount || 0), 0);
+    return { count: oos.length, totalNotifies: notifies };
   }, [activeLink]);
 
   const sidebarItems = [
     { id: 'reputation', label: 'قدرت فروشنده', icon: '👑' },
     { id: 'analytics', label: 'آنالیز ترافیک', icon: '📈' },
+    { id: 'promotions', label: 'پروموت و تبلیغات پولی', icon: '🚀' },
+    { id: 'marketing', label: 'پیام‌رسانی هوشمند', icon: '📢' },
     { id: 'products', label: 'محصولات', icon: '📦' },
     { id: 'orders', label: 'سفارشات', icon: '📝' },
+    { id: 'mini-crm', label: 'مینی CRM', icon: '👥' },
     { id: 'manage-links', label: 'لینک‌های مستقیم', icon: '🔗' },
     { id: 'profile', label: 'پروفایل و دسته‌بندی', icon: '⚙️' },
     { id: 'bank', label: 'تنظیمات پرداخت', icon: '🏦' },
@@ -81,12 +89,17 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full" dir="rtl">
-      {/* Stock Warning */}
-      {outOfStockProducts.length > 0 && activeTab === 'products' && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-3xl flex items-center justify-between animate-in slide-in-from-top-4">
-           <div className="flex items-center gap-3">
-              <span className="text-xl">⚠️</span>
-              <p className="text-red-600 text-sm font-black">تعداد {outOfStockProducts.length} محصول از فروشگاه شما ناموجود شده است. لطفاً انبار را شارژ کنید.</p>
+      {/* Updated Neutral Inventory Report */}
+      {outOfStockInfo.count > 0 && activeTab === 'products' && (
+        <div className="mb-6 p-6 bg-slate-100 border border-slate-200 rounded-[2rem] flex items-center justify-between animate-in slide-in-from-top-4">
+           <div className="flex items-center gap-4">
+              <span className="text-2xl">📊</span>
+              <div>
+                <p className="text-slate-900 text-sm font-black">گزارش موجودی کالا</p>
+                <p className="text-slate-500 text-[11px] font-bold mt-1">
+                  تعداد {outOfStockInfo.count} کالا در وضعیت ناموجود قرار دارند. مجموعاً {outOfStockInfo.totalNotifies} درخواست اطلاع‌رسانی (خبرم کن) توسط مشتریان برای این کالاها ثبت شده است.
+                </p>
+              </div>
            </div>
         </div>
       )}
@@ -208,6 +221,8 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
             <div className="animate-in fade-in duration-500">
               {activeTab === 'reputation' && <SellerPower activeLink={activeLink} />}
               {activeTab === 'analytics' && <AnalyticsOverview activeLink={activeLink} />}
+              {activeTab === 'promotions' && <PromotionManager activeLink={activeLink} />}
+              {activeTab === 'marketing' && <MarketingManager activeLink={activeLink} />}
               {activeTab === 'products' && (
                 <ProductManager 
                   activeLink={activeLink} 
@@ -218,6 +233,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 />
               )}
               {activeTab === 'orders' && <OrderManager activeLink={activeLink} onUpdateOrder={props.onUpdateOrder} />}
+              {activeTab === 'mini-crm' && <MiniCRM activeLink={activeLink} />}
               {activeTab === 'manage-links' && <LinkManager activeLink={activeLink} refreshData={refreshLocalData} />}
               {activeTab === 'profile' && <ProfileManager activeLink={activeLink} onUpdateProfile={props.onUpdateProfile} />}
               {activeTab === 'bank' && <PaymentSettings activeLink={activeLink} onUpdateBankDetails={props.onUpdateBankDetails} />}
