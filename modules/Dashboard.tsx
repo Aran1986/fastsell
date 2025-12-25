@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { SalesLink, Product, Currency, BankDetails, Order, AppUser, Integrations } from '../types';
+import { SalesLink, Product, Currency, BankDetails, Order, AppUser, Integrations, StoreMode } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '../services/apiService';
@@ -82,6 +82,20 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     }
   };
 
+  const getDynamicLabels = () => {
+    const mode = activeLink?.mode || StoreMode.PRODUCT;
+    switch(mode) {
+      case StoreMode.SERVICE:
+        return { items: 'خدمات / کلاس', inventory: 'ظرفیت کل', orders: 'ثبت‌نام‌ها', icon: '🎓' };
+      case StoreMode.BOOKING:
+        return { items: 'اسلات‌های زمانی', inventory: 'نوبت‌های خالی', orders: 'رزروها', icon: '📅' };
+      default:
+        return { items: 'محصولات', inventory: 'انبارداری', orders: 'سفارشات', icon: '📦' };
+    }
+  };
+
+  const labels = getDynamicLabels();
+
   const sidebarItems = [
     { id: 'reputation', label: 'قدرت فروشنده', icon: '👑' },
     { id: 'analytics', label: 'آنالیز ترافیک', icon: '📈' },
@@ -89,8 +103,8 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     { id: 'marketing', label: 'پیام‌رسانی هوشمند', icon: '📢' },
     { id: 'chats', label: 'پیام‌های خریداران', icon: '💬' },
     { id: 'bridges', label: 'پل‌های ارتباطی', icon: '🔌' },
-    { id: 'products', label: 'محصولات', icon: '📦' },
-    { id: 'orders', label: 'سفارشات', icon: '📝' },
+    { id: 'products', label: labels.items, icon: labels.icon },
+    { id: 'orders', label: labels.orders, icon: '📝' },
     { id: 'mini-crm', label: 'مینی CRM', icon: '👥' },
     { id: 'manage-links', label: 'لینک‌های مستقیم', icon: '🔗' },
     { id: 'profile', label: 'پروفایل و دسته‌بندی', icon: '⚙️' },
@@ -101,15 +115,15 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full" dir="rtl">
-      {/* Inventory Report */}
+      {/* Inventory Report - Adaptive */}
       {outOfStockInfo.count > 0 && activeTab === 'products' && (
         <div className="mb-6 p-6 bg-slate-100 border border-slate-200 rounded-[2rem] flex items-center justify-between animate-in slide-in-from-top-4">
            <div className="flex items-center gap-4">
               <span className="text-2xl">📊</span>
               <div>
-                <p className="text-slate-900 text-sm font-black">گزارش موجودی کالا</p>
+                <p className="text-slate-900 text-sm font-black">گزارش {labels.inventory}</p>
                 <p className="text-slate-500 text-[11px] font-bold mt-1">
-                  تعداد {outOfStockInfo.count} کالا در وضعیت ناموجود قرار دارند. مجموعاً {outOfStockInfo.totalNotifies} درخواست اطلاع‌رسانی توسط مشتریان ثبت شده است.
+                  تعداد {outOfStockInfo.count} {labels.items} در وضعیت ناموجود یا تکمیل ظرفیت قرار دارند. {outOfStockInfo.totalNotifies} درخواست اطلاع‌رسانی ثبت شده است.
                 </p>
               </div>
            </div>
@@ -124,12 +138,15 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               {activeTab === 'purchases' ? '🛍️ خریدهای من' : activeTab === 'affiliate' ? '🤝 همکاری در فروش' : activeLink?.title || 'داشبورد'}
             </h1>
             {activeLink && activeTab !== 'purchases' && activeTab !== 'affiliate' && (
-              <p className="text-xs font-bold text-slate-400 mt-0.5" dir="ltr">/s/{activeLink.slug}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded text-[8px] font-black uppercase">{activeLink.mode}</span>
+                <p className="text-xs font-bold text-slate-400" dir="ltr">/s/{activeLink.slug}</p>
+              </div>
             )}
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => navigate('/register')} className="bg-green-50 text-green-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-green-100 transition-all">+ ساخت فروشگاه جدید</button>
+          <button onClick={() => navigate('/register')} className="bg-green-50 text-green-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-green-100 transition-all">+ ساخت لینک جدید</button>
           {activeLink && (
             <button 
               onClick={() => window.open(`/#/s/${activeLink.slug}`, '_blank')} 
@@ -155,7 +172,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
             </button>
 
             <div className="h-px bg-slate-100 my-4 mx-4"></div>
-            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">مدیریت فروشگاه</h2>
+            <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">مدیریت فعالیت</h2>
             
             {activeLink ? (
               <div className="space-y-1">
@@ -171,7 +188,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                 ))}
               </div>
             ) : (
-              <div className="p-4 text-center text-[10px] font-bold text-slate-300 italic">هنوز فروشگاهی ندارید.</div>
+              <div className="p-4 text-center text-[10px] font-bold text-slate-300 italic">هنوز لینکی نساخته‌اید.</div>
             )}
           </div>
         </aside>
@@ -226,8 +243,8 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
           ) : (
             <div className="bg-white rounded-[2.5rem] p-20 border border-slate-200 shadow-sm text-center flex flex-col items-center">
                <div className="text-6xl mb-6">🏜️</div>
-               <h3 className="text-xl font-black text-slate-900 mb-2">هنوز فروشگاهی نساخته‌اید</h3>
-               <button onClick={() => navigate('/register')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-xl transition-all">ساخت اولین فروشگاه</button>
+               <h3 className="text-xl font-black text-slate-900 mb-2">هنوز لینکی نساخته‌اید</h3>
+               <button onClick={() => navigate('/register')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-xl transition-all">ساخت اولین لینک هوشمند</button>
             </div>
           )}
         </main>

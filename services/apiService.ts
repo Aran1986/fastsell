@@ -138,7 +138,15 @@ export const ApiService = {
       return;
     }
 
-    const { data: store } = await supabase.from('stores').select('id').eq('slug', linkId).maybeSingle();
+    // Smart lookup by ID (UUID) or Slug
+    let query = supabase.from('stores').select('id');
+    if (linkId.match(/^[0-9a-fA-F-]{36}$/)) {
+        query = query.eq('id', linkId);
+    } else {
+        query = query.eq('slug', linkId);
+    }
+    
+    const { data: store } = await query.maybeSingle();
     if (!store) throw new Error("Store not found");
 
     const { error } = await supabase.from('products').insert([{
