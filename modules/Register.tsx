@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SalesLink, AppUser, StoreMode } from '../types';
 import { ApiService } from '../services/apiService';
@@ -12,6 +12,7 @@ interface RegisterProps {
   user: AppUser | null;
 }
 
+// Added React import to satisfy namespace usage for FC and FormEvent types
 const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLinks, user }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +31,19 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
   const queryParams = new URLSearchParams(location.search);
   const refCode = queryParams.get('ref');
 
+  // Helper to generate clean slug from title
+  const generateSlug = (text: string) => {
+    return text
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-') // Replace spaces with -
+      .replace(/[^\u0600-\u06FFa-z0-9-]/g, '') // Keep Persian, English, numbers and hyphens
+      .replace(/-+/g, '-') // Replace multiple - with single -
+      .replace(/^-+/, '') // Trim - from start
+      .replace(/-+$/, ''); // Trim - from end
+  };
+
+  // Fixed React.FormEvent namespace error by importing React
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -54,9 +68,13 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
     }
   };
 
+  // Fixed React.FormEvent namespace error by importing React
   const handleCreateShop = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!shopName || !slug) return;
+    if (!shopName || !slug) {
+        alert('لطفاً نام فروشگاه و آدرس را تکمیل کنید.');
+        return;
+    }
     onCreateLink({ title: shopName, slug, mode });
     navigate('/dashboard');
   };
@@ -70,21 +88,43 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
              <div className="mb-10 flex flex-col items-center">
                 <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center text-white text-3xl mb-4 shadow-xl shadow-indigo-100">🚀</div>
                 <h2 className="text-3xl font-black text-slate-900">ساخت موتور فروش جدید</h2>
-                <p className="text-slate-400 text-sm font-bold mt-2">چه چیزی برای فروش دارید؟</p>
+                <p className="text-slate-400 text-sm font-bold mt-2">اطلاعات پایه کسب‌وکار خود را وارد کنید.</p>
              </div>
              
              <form onSubmit={handleCreateShop} noValidate className="space-y-8 text-right" dir="rtl">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <div className="space-y-2">
                      <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2 tracking-widest">نام برند یا کسب‌وکار</label>
-                     <input required type="text" value={shopName} onChange={e => {
-                       setShopName(e.target.value);
-                       if(!slug) setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
-                     }} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-black focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="مثلاً: آکادمی هنر" />
+                     <input 
+                        required 
+                        type="text" 
+                        value={shopName} 
+                        onChange={e => {
+                            const val = e.target.value;
+                            setShopName(val);
+                            // Auto-generate slug while typing
+                            setSlug(generateSlug(val));
+                        }} 
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-black focus:ring-2 focus:ring-indigo-100 transition-all" 
+                        placeholder="مثلاً: آکادمی هنر" 
+                     />
                    </div>
                    <div className="space-y-2">
-                     <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2 tracking-widest">آدرس اختصاصی (URL)</label>
-                     <input required type="text" value={slug} onChange={e => setSlug(e.target.value.toLowerCase())} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-mono text-left focus:ring-2 focus:ring-indigo-100 transition-all" dir="ltr" />
+                     <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2 tracking-widest">آدرس اختصاصی (قابل ویرایش)</label>
+                     <input 
+                        required 
+                        type="text" 
+                        value={slug} 
+                        onChange={e => setSlug(e.target.value.replace(/\s+/g, '-'))} 
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-bold text-left focus:ring-2 focus:ring-indigo-100 transition-all" 
+                        dir="ltr" 
+                        placeholder="my-shop-name"
+                     />
+                     {slug && (
+                        <p className="text-[9px] font-bold text-indigo-400 mt-2 mr-2">
+                           آدرس نهایی: <span className="opacity-60">fastsell.ir/s/</span>{slug}
+                        </p>
+                     )}
                    </div>
                 </div>
 
