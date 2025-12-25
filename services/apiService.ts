@@ -106,13 +106,12 @@ export const ApiService = {
       return updatedStore.id;
     }
 
-    // Fix: dbData bank_details column mapping corrected to use store.bankDetails
     const dbData = {
       owner_email: store.ownerEmail,
       slug: store.slug,
       title: store.title,
       bio: store.bio,
-      mode: store.mode, // Save the mode
+      mode: store.mode,
       theme_color: store.themeColor,
       buy_button_color: store.buyButtonColor,
       shipping_fee: store.shippingFee,
@@ -265,7 +264,7 @@ export const ApiService = {
       slug: s.slug,
       title: s.title,
       bio: s.bio,
-      mode: (s.mode as StoreMode) || StoreMode.PRODUCT, // Map the mode
+      mode: (s.mode as StoreMode) || StoreMode.PRODUCT,
       themeColor: s.theme_color,
       buyButtonColor: s.buy_button_color,
       shippingFee: Number(s.shipping_fee) || 0,
@@ -293,7 +292,7 @@ export const ApiService = {
         isFeatured: p.is_featured,
         variants: p.variants || [],
         shippingMethod: p.shipping_method || 'post',
-        duration_minutes: p.duration_minutes,
+        durationMinutes: p.duration_minutes,
         isOnline: p.is_online,
         availableSlots: p.available_slots
       })),
@@ -302,7 +301,7 @@ export const ApiService = {
         productId: o.product_id,
         productName: o.product_name,
         amount: Number(o.amount),
-        shipping_fee: Number(o.shipping_fee) || 0,
+        shippingFee: Number(o.shipping_fee) || 0,
         totalPaid: Number(o.total_paid),
         currency: o.currency,
         customerEmail: o.customer_email,
