@@ -3,8 +3,8 @@ import React from 'react';
 import Header from '../components/Header';
 
 const DatabaseSchema: React.FC = () => {
-  const sqlCode = `-- FASTSell Complete Database Schema (v2.2)
--- این اسکریپت تمامی نیازهای پلتفرم شامل محصولات، سفارشات، نوتیفیکیشن، چت و نظرات را پوشش می‌دهد.
+  const sqlCode = `-- FASTSell Complete Database Schema (v2.3)
+-- اضافه شدن ستون mode برای پشتیبانی از کالا، خدمات و رزرو
 
 -- ۰. حذف جداول قدیمی برای نصب تمیز
 DROP TABLE IF EXISTS public.notifications CASCADE;
@@ -15,10 +15,10 @@ DROP TABLE IF EXISTS public.products CASCADE;
 DROP TABLE IF EXISTS public.stores CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
--- ۱. جدول کاربران (هسته احراز هویت)
+-- ۱. جدول کاربران
 CREATE TABLE public.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    identifier TEXT UNIQUE NOT NULL, -- ایمیل یا موبایل
+    identifier TEXT UNIQUE NOT NULL,
     auth_type TEXT DEFAULT 'email',
     password TEXT,
     registered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -27,13 +27,14 @@ CREATE TABLE public.users (
     bridge_prefs JSONB DEFAULT '{"telegram": "neutral", "whatsapp": "neutral", "sms": "neutral", "email": "neutral"}'::jsonb
 );
 
--- ۲. جدول فروشگاه‌ها
+-- ۲. جدول فروشگاه‌ها (اضافه شدن mode)
 CREATE TABLE public.stores (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     owner_email TEXT REFERENCES public.users(identifier) ON DELETE CASCADE,
     slug TEXT UNIQUE NOT NULL,
     title TEXT NOT NULL,
     bio TEXT,
+    mode TEXT DEFAULT 'product', -- product | service | booking
     theme_color TEXT DEFAULT '#6366f1',
     buy_button_color TEXT DEFAULT '#6366f1',
     shipping_fee NUMERIC DEFAULT 0,
@@ -47,7 +48,7 @@ CREATE TABLE public.stores (
     total_sales NUMERIC DEFAULT 0
 );
 
--- ۳. جدول محصولات
+-- ۳. جدول محصولات (با فیلدهای منعطف)
 CREATE TABLE public.products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     store_id UUID REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -66,7 +67,11 @@ CREATE TABLE public.products (
     shipping_method TEXT DEFAULT 'post',
     variants JSONB DEFAULT '[]'::jsonb,
     rating NUMERIC DEFAULT 5.0,
-    review_count INTEGER DEFAULT 0
+    review_count INTEGER DEFAULT 0,
+    -- فیلدهای جدید برای خدمات و رزرو
+    duration_minutes INTEGER,
+    is_online BOOLEAN DEFAULT true,
+    available_slots TEXT[]
 );
 
 -- ۴. جدول سفارشات
@@ -87,7 +92,10 @@ CREATE TABLE public.orders (
     status TEXT DEFAULT 'pending',
     source TEXT DEFAULT 'direct',
     traffic_source TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    -- فیلدهای رزرو
+    booking_date DATE,
+    booking_time TIME
 );
 
 -- ۵. جدول نوتیفیکیشن‌ها
@@ -96,7 +104,7 @@ CREATE TABLE public.notifications (
     user_id TEXT REFERENCES public.users(identifier) ON DELETE CASCADE,
     text TEXT NOT NULL,
     is_read BOOLEAN DEFAULT false,
-    type TEXT DEFAULT 'system', -- sale | message | system
+    type TEXT DEFAULT 'system',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -110,7 +118,7 @@ CREATE TABLE public.chat_sessions (
     last_message_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- ۷. جدول نظرات (اصلاح شده با فیلد store_id)
+-- ۷. جدول نظرات
 CREATE TABLE public.reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     store_id UUID REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -126,10 +134,9 @@ CREATE TABLE public.reviews (
       <Header />
       <main className="max-w-5xl mx-auto px-6 py-16 w-full">
         <div className="mb-12">
-          <h1 className="text-4xl font-black text-slate-900 mb-4">مدیریت دیتابیس (Supabase SQL) 🗄️</h1>
-          <div className="bg-red-50 border border-red-200 p-6 rounded-[2rem] text-red-800 font-bold text-xs leading-relaxed">
-            ⚠️ یادآوری: این اسکریپت شامل ۷ جدول کامل است. اجرای آن تمامی داده‌های قبلی را حذف و ساختار جدید را جایگزین می‌کند. 
-            پس از کپی، آن را در SQL Editor پنل Supabase خود اجرا کنید.
+          <h1 className="text-4xl font-black text-slate-900 mb-4">مدیریت دیتابیس (SQL) 🗄️</h1>
+          <div className="bg-indigo-50 border border-indigo-200 p-6 rounded-[2rem] text-indigo-800 font-bold text-xs leading-relaxed">
+            ساختار جدید (v2.3) برای پشتیبانی از <b>مودهای کالا، خدمات و رزرو</b> آماده است. اسکریپت زیر را در Supabase اجرا کنید.
           </div>
         </div>
 

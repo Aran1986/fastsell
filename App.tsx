@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SalesLink, Product, Currency, AppUser } from './types';
+import { SalesLink, Product, Currency, AppUser, StoreMode } from './types';
 import { LanguageProvider } from './context/LanguageContext';
 import { ApiService } from './services/apiService';
 
@@ -57,7 +57,7 @@ const App: React.FC = () => {
     refreshData();
   };
 
-  const createLink = async (linkData: { title: string; slug: string }) => {
+  const createLink = async (linkData: { title: string; slug: string; mode: StoreMode }) => {
     if (!currentUser) return;
     const newLink: SalesLink = {
       id: '', 
@@ -65,6 +65,7 @@ const App: React.FC = () => {
       slug: linkData.slug,
       title: linkData.title,
       bio: 'به فروشگاه جدید من خوش آمدید!',
+      mode: linkData.mode,
       themeColor: '#6366f1',
       buyButtonColor: '#6366f1',
       totalSales: 0,

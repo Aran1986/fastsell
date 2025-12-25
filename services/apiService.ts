@@ -1,5 +1,5 @@
 
-import { SalesLink, Product, Order, Currency, AppUser, Review } from '../types';
+import { SalesLink, Product, Order, Currency, AppUser, Review, StoreMode } from '../types';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { INITIAL_STORES } from '../constants/mockData';
 
@@ -76,7 +76,6 @@ export const ApiService = {
       return saved ? JSON.parse(saved) : INITIAL_STORES;
     }
     try {
-      // Fetch everything linked to stores
       const { data: stores, error } = await supabase
         .from('stores')
         .select(`
@@ -86,20 +85,13 @@ export const ApiService = {
           reviews(*)
         `);
       
-      if (error) {
-        console.error("Supabase fetch error:", error);
-        throw error;
-      }
-      
-      // If DB is empty, optionally return initial mock stores for demo
-      if (!stores || stores.length === 0) {
-        return INITIAL_STORES;
-      }
+      if (error) throw error;
+      if (!stores || stores.length === 0) return INITIAL_STORES;
 
       return stores.map(s => this.mapStoreData(s, s.products || [], s.orders || [], s.reviews || []));
     } catch (e) {
       console.error("Fetch Stores Error:", e);
-      return INITIAL_STORES; // Return mock data if DB fails to prevent blank UI
+      return INITIAL_STORES;
     }
   },
 
@@ -114,11 +106,13 @@ export const ApiService = {
       return updatedStore.id;
     }
 
+    // Fix: dbData bank_details column mapping corrected to use store.bankDetails
     const dbData = {
       owner_email: store.ownerEmail,
       slug: store.slug,
       title: store.title,
       bio: store.bio,
+      mode: store.mode, // Save the mode
       theme_color: store.themeColor,
       buy_button_color: store.buyButtonColor,
       shipping_fee: store.shippingFee,
@@ -160,7 +154,10 @@ export const ApiService = {
       stock: product.stock,
       is_featured: product.isFeatured,
       shipping_method: product.shippingMethod,
-      variants: product.variants
+      variants: product.variants,
+      duration_minutes: product.durationMinutes,
+      is_online: product.isOnline,
+      available_slots: product.availableSlots
     }]);
     if (error) throw error;
   },
@@ -206,7 +203,9 @@ export const ApiService = {
       customer_postal_code: orderData.customerPostalCode,
       selected_variants: orderData.selectedVariants,
       source: orderData.source,
-      traffic_source: orderData.trafficSource
+      traffic_source: orderData.trafficSource,
+      booking_date: orderData.bookingDate,
+      booking_time: orderData.bookingTime
     }]).select().single();
 
     if (error) throw error;
@@ -266,6 +265,7 @@ export const ApiService = {
       slug: s.slug,
       title: s.title,
       bio: s.bio,
+      mode: (s.mode as StoreMode) || StoreMode.PRODUCT, // Map the mode
       themeColor: s.theme_color,
       buyButtonColor: s.buy_button_color,
       shippingFee: Number(s.shipping_fee) || 0,
@@ -292,14 +292,17 @@ export const ApiService = {
         reviewCount: p.review_count || 0,
         isFeatured: p.is_featured,
         variants: p.variants || [],
-        shippingMethod: p.shipping_method || 'post'
+        shippingMethod: p.shipping_method || 'post',
+        duration_minutes: p.duration_minutes,
+        isOnline: p.is_online,
+        availableSlots: p.available_slots
       })),
       orders: orders.map(o => ({
         id: o.id,
         productId: o.product_id,
         productName: o.product_name,
         amount: Number(o.amount),
-        shippingFee: Number(o.shipping_fee) || 0,
+        shipping_fee: Number(o.shipping_fee) || 0,
         totalPaid: Number(o.total_paid),
         currency: o.currency,
         customerEmail: o.customer_email,
@@ -313,7 +316,9 @@ export const ApiService = {
         systemFee: Number(o.system_fee) || 0,
         affiliateReward: Number(o.affiliate_reward) || 0,
         sellerNet: Number(o.seller_net) || 0,
-        shippingMethod: o.shipping_method || 'post'
+        shippingMethod: o.shipping_method || 'post',
+        bookingDate: o.booking_date,
+        bookingTime: o.booking_time
       })),
       reviews: reviews.map(r => ({
         id: r.id,

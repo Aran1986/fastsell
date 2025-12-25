@@ -6,6 +6,12 @@ export enum Currency {
   CRYPTO = 'CRYPTO'
 }
 
+export enum StoreMode {
+  PRODUCT = 'product',   // فروش کالا با انبار و پست
+  SERVICE = 'service',   // ارائه خدمات و کلاس (دیجیتال/حضوری)
+  BOOKING = 'booking'    // رزرو نوبت و اسلات زمانی
+}
+
 export type PreferenceState = 'yes' | 'no' | 'neutral';
 
 export interface EventPrefs {
@@ -121,6 +127,9 @@ export interface Order {
   affiliateReward: number;
   sellerNet: number;
   shippingLabel?: ShippingLabel;
+  // Fields for Booking
+  bookingDate?: string;
+  bookingTime?: string;
 }
 
 export interface Product {
@@ -142,6 +151,10 @@ export interface Product {
   variants?: ProductVariant[];
   isFeatured?: boolean;
   shippingMethod?: 'post' | 'delivery' | 'digital';
+  // Service & Booking specific
+  durationMinutes?: number;
+  isOnline?: boolean;
+  availableSlots?: string[]; // e.g. ["10:00", "11:00"]
 }
 
 export interface SalesLink {
@@ -150,6 +163,7 @@ export interface SalesLink {
   slug: string;
   title: string;
   bio: string;
+  mode: StoreMode; // New core field
   products: Product[];
   orders: Order[];
   reviews?: Review[];
@@ -177,6 +191,5 @@ export interface AppUser {
   referralCode: string;
   referredBy?: string;
   notifications?: AppNotification[];
-  // Global Privacy preference for this user as a customer
   bridgePrefs?: ChannelPrefs;
 }

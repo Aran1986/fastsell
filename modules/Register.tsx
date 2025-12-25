@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { SalesLink, AppUser } from '../types';
+import { SalesLink, AppUser, StoreMode } from '../types';
 import { ApiService } from '../services/apiService';
 import Header from '../components/Header';
 
 interface RegisterProps {
   onLogin: (user: AppUser) => void;
-  onCreateLink: (data: { title: string; slug: string }) => void;
+  onCreateLink: (data: { title: string; slug: string; mode: StoreMode }) => void;
   existingLinks: SalesLink[];
   user: AppUser | null;
 }
@@ -25,6 +25,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
 
   const [shopName, setShopName] = useState('');
   const [slug, setSlug] = useState('');
+  const [mode, setMode] = useState<StoreMode>(StoreMode.PRODUCT);
 
   const queryParams = new URLSearchParams(location.search);
   const refCode = queryParams.get('ref');
@@ -41,12 +42,10 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
         
         if (newUser) {
           onLogin(newUser);
-          navigate('/dashboard');
         }
       } else {
         const user = await ApiService.login(identifier, password);
         onLogin(user);
-        navigate('/dashboard');
       }
     } catch (err: any) {
       setError(err.message);
@@ -58,7 +57,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
   const handleCreateShop = (e: React.FormEvent) => {
     e.preventDefault();
     if (!shopName || !slug) return;
-    onCreateLink({ title: shopName, slug });
+    onCreateLink({ title: shopName, slug, mode });
     navigate('/dashboard');
   };
 
@@ -67,25 +66,53 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
       <div className="min-h-screen bg-slate-50 flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-200">
-             <div className="mb-8 flex flex-col items-center">
-                <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-2xl mb-4">🏪</div>
-                <h2 className="text-2xl font-black text-slate-900">ساخت ویترین جدید</h2>
-                <p className="text-slate-400 text-xs font-bold mt-1">خوش آمدید {user.identifier}</p>
+          <div className="max-w-2xl w-full bg-white rounded-[3rem] p-10 sm:p-12 shadow-2xl border border-slate-200">
+             <div className="mb-10 flex flex-col items-center">
+                <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center text-white text-3xl mb-4 shadow-xl shadow-indigo-100">🚀</div>
+                <h2 className="text-3xl font-black text-slate-900">ساخت موتور فروش جدید</h2>
+                <p className="text-slate-400 text-sm font-bold mt-2">چه چیزی برای فروش دارید؟</p>
              </div>
-             <form onSubmit={handleCreateShop} noValidate className="space-y-6">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2">نام کسب‌وکار</label>
-                  <input required type="text" value={shopName} onChange={e => {
-                    setShopName(e.target.value);
-                    setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
-                  }} className="w-full px-6 py-4 rounded-2xl border border-slate-200 outline-none font-bold" placeholder="نام برند شما" />
+             
+             <form onSubmit={handleCreateShop} noValidate className="space-y-8 text-right" dir="rtl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div className="space-y-2">
+                     <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2 tracking-widest">نام برند یا کسب‌وکار</label>
+                     <input required type="text" value={shopName} onChange={e => {
+                       setShopName(e.target.value);
+                       if(!slug) setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                     }} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-black focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="مثلاً: آکادمی هنر" />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2 tracking-widest">آدرس اختصاصی (URL)</label>
+                     <input required type="text" value={slug} onChange={e => setSlug(e.target.value.toLowerCase())} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-mono text-left focus:ring-2 focus:ring-indigo-100 transition-all" dir="ltr" />
+                   </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2">آدرس فروشگاه (Slug)</label>
-                  <input required type="text" value={slug} onChange={e => setSlug(e.target.value.toLowerCase())} className="w-full px-6 py-4 rounded-2xl border border-slate-200 outline-none font-mono text-left" dir="ltr" />
+
+                <div className="space-y-4">
+                  <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase mr-2 tracking-widest">انتخاب مود فعالیت (Vertical Mode)</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                     {[
+                       { id: StoreMode.PRODUCT, title: 'کالای فیزیکی', desc: 'انبارداری و ارسال پستی', icon: '🛒' },
+                       { id: StoreMode.SERVICE, title: 'خدمات / کلاس', desc: 'فایل یا لینک آنلاین', icon: '🎓' },
+                       { id: StoreMode.BOOKING, title: 'رزرو نوبت', desc: 'تقویم و اسلات زمانی', icon: '📅' }
+                     ].map(m => (
+                       <button 
+                        key={m.id}
+                        type="button"
+                        onClick={() => setMode(m.id)}
+                        className={`p-6 rounded-[2.5rem] border-2 transition-all text-right flex flex-col gap-3 group ${mode === m.id ? 'border-indigo-600 bg-indigo-50/50' : 'border-slate-100 bg-white hover:border-indigo-200'}`}
+                       >
+                          <div className="text-3xl group-hover:scale-110 transition-transform">{m.icon}</div>
+                          <div>
+                             <div className={`font-black text-sm ${mode === m.id ? 'text-indigo-600' : 'text-slate-900'}`}>{m.title}</div>
+                             <div className="text-[10px] font-bold text-slate-400 mt-1">{m.desc}</div>
+                          </div>
+                       </button>
+                     ))}
+                  </div>
                 </div>
-                <button type="submit" className="w-full py-5 bg-indigo-600 text-white font-black text-lg rounded-2xl shadow-xl hover:bg-indigo-700 transition-all">تایید و شروع فروش</button>
+
+                <button type="submit" className="w-full py-6 bg-slate-900 text-white font-black text-xl rounded-[2rem] shadow-2xl hover:bg-indigo-600 transition-all transform hover:-translate-y-1">تایید و شروع پیکربندی</button>
              </form>
           </div>
         </div>

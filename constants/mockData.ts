@@ -1,5 +1,5 @@
 
-import { SalesLink, Currency, Order, Review } from '../types';
+import { SalesLink, Currency, Order, Review, StoreMode } from '../types';
 
 const DEFAULT_FULL_CATS = [
   'عمومی', 'موبایل و تبلت', 'لپ‌تاپ و کامپیوتر', 'پوشاک مردانه', 'پوشاک زنانه', 
@@ -45,6 +45,8 @@ export const INITIAL_STORES: SalesLink[] = [
     slug: 'digital-hub',
     title: 'دیجیتال هاب آریا',
     bio: 'مرجع تخصصی گجت‌های روز دنیا و لوازم جانبی گیمینگ با گارانتی معتبر.',
+    // Added missing mode property
+    mode: StoreMode.PRODUCT,
     themeColor: '#4f46e5',
     buyButtonColor: '#4338ca',
     totalSales: 450000000,
