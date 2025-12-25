@@ -15,6 +15,9 @@ import Header from './components/Header';
 import Transparency from './modules/Transparency';
 import Pricing from './modules/Pricing';
 import Roadmap from './modules/Roadmap';
+import DatabaseSchema from './modules/DatabaseSchema';
+import TechnicalDebts from './modules/TechnicalDebts';
+import ExistingFeatures from './modules/ExistingFeatures';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -29,7 +32,6 @@ const App: React.FC = () => {
       const allStores = await ApiService.getAllStores();
       setLinks(allStores);
 
-      // --- Custom Domain Logic ---
       const hostname = window.location.hostname;
       const isMainDomain = hostname.includes('fastsell.ir') || hostname === 'localhost';
       
@@ -37,8 +39,6 @@ const App: React.FC = () => {
         const found = allStores.find(s => s.integrations?.customDomain === hostname);
         if (found) setMappedStore(found);
       }
-      // ----------------------------
-
       setIsLoading(false);
     };
     init();
@@ -47,7 +47,6 @@ const App: React.FC = () => {
   const refreshData = async () => {
     const all = await ApiService.getAllStores();
     setLinks(all);
-    // Also re-check mapped store if needed
     const hostname = window.location.hostname;
     const found = all.find(s => s.integrations?.customDomain === hostname);
     if (found) setMappedStore(found);
@@ -80,7 +79,12 @@ const App: React.FC = () => {
         'خدمات و آموزش', 'ساعت و اکسسوری', 'طلا و جواهر', 'لوازم دکوری'
       ],
       bankDetails: { walletAddress: '', network: 'TRC20' },
-      integrations: { enableOrderNotifs: true, telegramChatId: '', whatsappNumber: '' }
+      integrations: { 
+        telegramChatId: '', 
+        whatsappNumber: '', 
+        prefs: { telegram: 'neutral', whatsapp: 'neutral', sms: 'neutral', email: 'neutral' },
+        eventPrefs: { orderUpdates: true, newsletters: true, promotions: true, security: true }
+      }
     };
     await ApiService.saveStore(newLink);
     await refreshData();
@@ -88,7 +92,6 @@ const App: React.FC = () => {
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50">...</div>;
 
-  // If this is a custom domain, ONLY render the specific store view
   if (mappedStore) {
     return (
       <LanguageProvider>
@@ -113,6 +116,7 @@ const App: React.FC = () => {
               });
               await refreshData();
             }} />} />
+            <Route path="/marketplace" element={<Marketplace links={links} />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </HashRouter>
@@ -129,6 +133,9 @@ const App: React.FC = () => {
             <Route path="/transparency" element={<Transparency />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/roadmap" element={<Roadmap />} />
+            <Route path="/database" element={<DatabaseSchema />} />
+            <Route path="/tech-debts" element={<TechnicalDebts />} />
+            <Route path="/features" element={<ExistingFeatures />} />
             <Route path="/marketplace" element={<Marketplace links={links} />} />
             <Route path="/register" element={<Register onLogin={handleLogin} onCreateLink={createLink} existingLinks={links} user={currentUser} />} />
             <Route path="/dashboard" element={

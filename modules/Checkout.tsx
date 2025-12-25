@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { SalesLink, Currency, Product } from '../types';
 import { ApiService } from '../services/apiService';
 import { TrackingService } from '../services/trackingService';
@@ -129,11 +129,18 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
       trafficSource: detectedSource, selectedVariants, shippingFee, totalPaid: totalAmount
     });
 
-    // Simulate Messaging Bridge
-    if (link.integrations?.telegramChatId || link.integrations?.whatsappNumber) {
-        setMessagingStatus('در حال اطلاع‌رسانی به فروشنده...');
+    // Respect Bridge Preferences
+    const prefs = link.integrations?.prefs;
+    const channels = [];
+    if (prefs?.telegram === 'yes') channels.push('Telegram');
+    if (prefs?.whatsapp === 'yes') channels.push('WhatsApp');
+    if (prefs?.sms === 'yes') channels.push('SMS');
+    if (prefs?.email === 'yes') channels.push('Email');
+
+    if (channels.length > 0) {
+        setMessagingStatus(`در حال اطلاع‌رسانی به فروشنده از طریق ${channels.join(' و ')}...`);
         setTimeout(() => {
-            setMessagingStatus('اعلان فروش به تلگرام و واتساپ ارسال شد ✅');
+            setMessagingStatus('تمامی اعلان‌ها با موفقیت ارسال شد ✅');
             setTimeout(() => setStep('success'), 1500);
         }, 2000);
     } else {
@@ -149,7 +156,12 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
             <h1 className="text-3xl font-black mb-4 text-slate-900">سفارش ثبت شد!</h1>
             <p className="text-slate-500 font-bold mb-10 text-sm">پیام تایید برای شما ارسال گردید.</p>
             {messagingStatus && <p className="text-indigo-600 font-black text-[10px] mb-8 bg-indigo-50 px-4 py-2 rounded-full">{messagingStatus}</p>}
-            {!initialProductId && <button onClick={() => navigate(`/s/${slug}`)} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black">بازگشت</button>}
+            
+            <div className="flex flex-col gap-3 w-full max-w-sm">
+               {!initialProductId && <button onClick={() => navigate(`/s/${slug}`)} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black shadow-lg">بازگشت به فروشگاه</button>}
+               <button onClick={() => navigate(`/marketplace`)} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all hover:-translate-y-1">🚀 مشاهده ویترین عمومی فست‌سل</button>
+               <p className="text-[10px] text-slate-400 font-bold mt-4 italic">میلیون‌ها کالای دیگر را در بازار بزرگ ما کشف کنید.</p>
+            </div>
         </div>
       </div>
     );

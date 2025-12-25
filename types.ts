@@ -6,6 +6,22 @@ export enum Currency {
   CRYPTO = 'CRYPTO'
 }
 
+export type PreferenceState = 'yes' | 'no' | 'neutral';
+
+export interface EventPrefs {
+  orderUpdates: boolean;
+  newsletters: boolean;
+  promotions: boolean;
+  security: boolean;
+}
+
+export interface ChannelPrefs {
+  telegram: PreferenceState;
+  whatsapp: PreferenceState;
+  sms: PreferenceState;
+  email: PreferenceState;
+}
+
 export interface BankDetails {
   cardNumber?: string;
   accountNumber?: string;
@@ -21,8 +37,9 @@ export interface BankDetails {
 export interface Integrations {
   telegramChatId?: string;
   whatsappNumber?: string;
-  enableOrderNotifs: boolean;
   customDomain?: string;
+  prefs: ChannelPrefs;
+  eventPrefs: EventPrefs;
 }
 
 export interface ProductVariant {
@@ -160,4 +177,6 @@ export interface AppUser {
   referralCode: string;
   referredBy?: string;
   notifications?: AppNotification[];
+  // Global Privacy preference for this user as a customer
+  bridgePrefs?: ChannelPrefs;
 }

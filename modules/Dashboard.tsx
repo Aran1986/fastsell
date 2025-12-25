@@ -20,7 +20,7 @@ import MiniCRM from './dashboard/MiniCRM';
 import MarketingManager from './dashboard/MarketingManager';
 import PromotionManager from './dashboard/PromotionManager';
 import ChatManager from './dashboard/ChatManager';
-import IntegrationSettings from './dashboard/IntegrationSettings';
+import CommunicationBridges from './dashboard/CommunicationBridges';
 
 interface DashboardProps {
   links: SalesLink[];
@@ -41,7 +41,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   
   // States
   const [activeLinkId, setActiveLinkId] = useState<string | null>(links[links.length - 1]?.id || null);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions' | 'chats' | 'integrations'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions' | 'chats' | 'bridges'>('products');
   const [localLinks, setLocalLinks] = useState<SalesLink[]>(links);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     { id: 'promotions', label: 'پروموت و تبلیغات پولی', icon: '🚀' },
     { id: 'marketing', label: 'پیام‌رسانی هوشمند', icon: '📢' },
     { id: 'chats', label: 'پیام‌های خریداران', icon: '💬' },
-    { id: 'integrations', label: 'اتصال (تلگرام/واتساپ)', icon: '🔌' },
+    { id: 'bridges', label: 'پل‌های ارتباطی', icon: '🔌' },
     { id: 'products', label: 'محصولات', icon: '📦' },
     { id: 'orders', label: 'سفارشات', icon: '📝' },
     { id: 'mini-crm', label: 'مینی CRM', icon: '👥' },
@@ -101,7 +101,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full" dir="rtl">
-      {/* Updated Neutral Inventory Report */}
+      {/* Inventory Report */}
       {outOfStockInfo.count > 0 && activeTab === 'products' && (
         <div className="mb-6 p-6 bg-slate-100 border border-slate-200 rounded-[2rem] flex items-center justify-between animate-in slide-in-from-top-4">
            <div className="flex items-center gap-4">
@@ -109,19 +109,16 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               <div>
                 <p className="text-slate-900 text-sm font-black">گزارش موجودی کالا</p>
                 <p className="text-slate-500 text-[11px] font-bold mt-1">
-                  تعداد {outOfStockInfo.count} کالا در وضعیت ناموجود قرار دارند. مجموعاً {outOfStockInfo.totalNotifies} درخواست اطلاع‌رسانی (خبرم کن) توسط مشتریان برای این کالاها ثبت شده است.
+                  تعداد {outOfStockInfo.count} کالا در وضعیت ناموجود قرار دارند. مجموعاً {outOfStockInfo.totalNotifies} درخواست اطلاع‌رسانی توسط مشتریان ثبت شده است.
                 </p>
               </div>
            </div>
         </div>
       )}
 
-      {/* Header Info */}
       <div className="mb-8 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm gap-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-indigo-50 rounded-2xl">
-             <span className="text-2xl">🏪</span>
-          </div>
+          <div className="p-3 bg-indigo-50 rounded-2xl"><span className="text-2xl">🏪</span></div>
           <div>
             <h1 className="text-2xl font-black text-slate-900">
               {activeTab === 'purchases' ? '🛍️ خریدهای من' : activeTab === 'affiliate' ? '🤝 همکاری در فروش' : activeLink?.title || 'داشبورد'}
@@ -145,7 +142,6 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar Navigation */}
         <aside className="lg:col-span-1 space-y-4">
           <div className="bg-white p-5 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-2">
             <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">بخش عمومی</h2>
@@ -178,27 +174,8 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               <div className="p-4 text-center text-[10px] font-bold text-slate-300 italic">هنوز فروشگاهی ندارید.</div>
             )}
           </div>
-          
-          {/* Multi-Store Selector if more than 1 store */}
-          {links.length > 1 && (
-            <div className="bg-white p-5 rounded-[2.5rem] border border-slate-200 shadow-sm">
-               <h2 className="text-[10px] font-black text-slate-400 px-4 mb-4 uppercase tracking-widest">تغییر فروشگاه</h2>
-               <div className="space-y-2">
-                  {links.map(l => (
-                    <button 
-                      key={l.id} 
-                      onClick={() => setActiveLinkId(l.id)} 
-                      className={`w-full p-3 rounded-xl text-right text-[11px] font-black border transition-all ${activeLinkId === l.id ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
-                    >
-                      {l.title}
-                    </button>
-                  ))}
-               </div>
-            </div>
-          )}
         </aside>
 
-        {/* Main Content Area */}
         <main className="lg:col-span-3 min-h-[600px]">
           {activeTab === 'purchases' ? (
             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm animate-in fade-in">
@@ -236,37 +213,21 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               {activeTab === 'promotions' && <PromotionManager activeLink={activeLink} />}
               {activeTab === 'marketing' && <MarketingManager activeLink={activeLink} />}
               {activeTab === 'chats' && <ChatManager activeLink={activeLink} />}
-              {activeTab === 'integrations' && <IntegrationSettings activeLink={activeLink} onUpdateIntegrations={handleUpdateIntegrations} />}
-              {activeTab === 'products' && (
-                <ProductManager 
-                  activeLink={activeLink} 
-                  onAddProduct={props.onAddProduct} 
-                  onDeleteProduct={props.onDeleteProduct} 
-                  refreshData={refreshLocalData} 
-                  onUpdateProfile={props.onUpdateProfile} 
-                />
-              )}
+              {activeTab === 'bridges' && <CommunicationBridges activeLink={activeLink} onUpdateIntegrations={handleUpdateIntegrations} />}
+              {activeTab === 'products' && <ProductManager activeLink={activeLink} onAddProduct={props.onAddProduct} onDeleteProduct={props.onDeleteProduct} refreshData={refreshLocalData} onUpdateProfile={props.onUpdateProfile} />}
               {activeTab === 'orders' && <OrderManager activeLink={activeLink} onUpdateOrder={props.onUpdateOrder} />}
               {activeTab === 'mini-crm' && <MiniCRM activeLink={activeLink} />}
               {activeTab === 'manage-links' && <LinkManager activeLink={activeLink} refreshData={refreshLocalData} />}
               {activeTab === 'profile' && <ProfileManager activeLink={activeLink} onUpdateProfile={props.onUpdateProfile} />}
               {activeTab === 'bank' && <PaymentSettings activeLink={activeLink} onUpdateBankDetails={props.onUpdateBankDetails} />}
               {activeTab === 'appearance' && <AppearanceSettings activeLink={activeLink} onUpdateThemeColor={props.onUpdateThemeColor} />}
-              {activeTab === 'finance' && (
-                <FinanceHub 
-                  activeLink={activeLink} 
-                  allUsers={[]} // Placeholder for users list in mock mode
-                  allStores={allLinksForPurchases} 
-                  currentUser={currentUser} 
-                />
-              )}
+              {activeTab === 'finance' && <FinanceHub activeLink={activeLink} allUsers={[]} allStores={allLinksForPurchases} currentUser={currentUser} />}
             </div>
           ) : (
             <div className="bg-white rounded-[2.5rem] p-20 border border-slate-200 shadow-sm text-center flex flex-col items-center">
                <div className="text-6xl mb-6">🏜️</div>
                <h3 className="text-xl font-black text-slate-900 mb-2">هنوز فروشگاهی نساخته‌اید</h3>
-               <p className="text-slate-400 font-bold text-sm mb-8">برای شروع فروش و استفاده از امکانات داشبورد، اولین ویترین خود را بسازید.</p>
-               <button onClick={() => navigate('/register')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all hover:-translate-y-1">ساخت اولین فروشگاه</button>
+               <button onClick={() => navigate('/register')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-xl transition-all">ساخت اولین فروشگاه</button>
             </div>
           )}
         </main>
