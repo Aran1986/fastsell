@@ -111,7 +111,7 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ activeLink, o
                  <div className="space-y-4">
                     <div className="bg-white/10 p-4 rounded-2xl border border-white/20">
                        <span className="text-[10px] font-black uppercase text-indigo-300 block mb-2">رکورد جهت تنظیم در پنل دامنه:</span>
-                       <code className="text-xs font-mono text-white block">A Record -> 1.2.3.4 (FastSell Server)</code>
+                       <code className="text-xs font-mono text-white block">A Record -&gt; 1.2.3.4 (FastSell Server)</code>
                     </div>
                  </div>
               </div>
