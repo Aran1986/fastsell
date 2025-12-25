@@ -22,7 +22,6 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [regSuccess, setRegSuccess] = useState(false);
 
   const [shopName, setShopName] = useState('');
   const [slug, setSlug] = useState('');
@@ -43,8 +42,6 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
         if (newUser) {
           onLogin(newUser);
           navigate('/dashboard');
-        } else {
-          setRegSuccess(true);
         }
       } else {
         const user = await ApiService.login(identifier, password);
@@ -64,19 +61,6 @@ const Register: React.FC<RegisterProps> = ({ onLogin, onCreateLink, existingLink
     onCreateLink({ title: shopName, slug });
     navigate('/dashboard');
   };
-
-  if (regSuccess) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
-         <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100">
-            <div className="text-6xl mb-6">📩</div>
-            <h2 className="text-2xl font-black mb-4">ایمیل خود را تایید کنید</h2>
-            <p className="text-slate-500 font-bold mb-8 leading-relaxed">یک لینک فعال‌سازی برای شما ارسال شد.</p>
-            <button onClick={() => setRegSuccess(false)} className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black">بازگشت به ورود</button>
-         </div>
-      </div>
-    );
-  }
 
   if (user) {
     return (

@@ -19,10 +19,16 @@ interface CheckoutProps {
     shippingFee: number, 
     totalPaid: number 
   }) => void;
+  initialProductId?: string;
+  initialStoreSlug?: string;
 }
 
-const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
-  const { slug, productId } = useParams<{ slug: string, productId: string }>();
+const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProductId, initialStoreSlug }) => {
+  const { slug: urlSlug, productId: urlProductId } = useParams<{ slug: string, productId: string }>();
+  
+  const slug = initialStoreSlug || urlSlug;
+  const productId = initialProductId || urlProductId;
+
   const navigate = useNavigate();
   const location = useLocation();
   const link = links.find(l => l.slug === slug);
@@ -91,7 +97,7 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
                 <button onClick={handleNotifyMe} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black shadow-lg">ثبت درخواست اطلاع‌رسانی</button>
               </div>
             )}
-            <button onClick={() => navigate(`/s/${slug}`)} className="mt-8 text-sm font-black text-slate-400 hover:text-indigo-600">← بازگشت به فروشگاه</button>
+            {!initialProductId && <button onClick={() => navigate(`/s/${slug}`)} className="mt-8 text-sm font-black text-slate-400 hover:text-indigo-600">← بازگشت به فروشگاه</button>}
         </div>
       </div>
     );
@@ -124,23 +130,23 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8 text-center" dir="rtl">
-        <div className="bg-white rounded-[4rem] p-12 max-w-lg w-full shadow-2xl border border-slate-100 flex flex-col items-center">
+      <div className="p-12 text-center" dir="rtl">
+        <div className="flex flex-col items-center">
             <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-8 animate-bounce"><svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div>
-            <h1 className="text-3xl font-black mb-4">سفارش ثبت شد!</h1>
+            <h1 className="text-3xl font-black mb-4 text-slate-900">سفارش ثبت شد!</h1>
             <p className="text-slate-500 font-bold mb-10 text-sm">پیام تایید برای شما ارسال گردید.</p>
-            <button onClick={() => navigate(`/s/${slug}`)} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black">بازگشت</button>
+            {!initialProductId && <button onClick={() => navigate(`/s/${slug}`)} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black">بازگشت</button>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row" dir="rtl">
-      <aside className="lg:w-96 bg-white border-l border-slate-200 p-10 flex flex-col order-last lg:order-first overflow-y-auto">
+    <div className={`flex flex-col lg:flex-row ${!initialProductId ? 'min-h-screen bg-slate-50' : 'h-full bg-white'}`} dir="rtl">
+      <aside className={`lg:w-96 p-10 flex flex-col order-last lg:order-first overflow-y-auto ${!initialProductId ? 'bg-white border-l border-slate-200' : 'bg-slate-50/50'}`}>
          <h2 className="text-xl font-black mb-8">فاکتور سفارش</h2>
          <div className="space-y-4 mb-8">
-            <div className="bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100 space-y-3">
+            <div className="bg-white p-6 rounded-[2rem] border border-slate-100 space-y-3 shadow-sm">
                <div className="flex justify-between text-sm font-black text-slate-800"><span>{product.name}</span><span>{(product.discountPrice || product.price).toLocaleString()}</span></div>
                <div className="flex justify-between text-[10px] font-bold text-slate-400"><span>هزینه ارسال</span><span>{shippingFee.toLocaleString()}</span></div>
             </div>
@@ -162,7 +168,16 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess }) => {
          )}
       </aside>
       <main className="flex-1 p-8 lg:p-20 max-w-3xl mx-auto w-full">
-         <div className="max-w-md mx-auto"><h1 className="text-3xl font-black mb-10">اطلاعات خریدار</h1><div className="space-y-6 text-right"><div className="relative"><input type="email" placeholder="ایمیل شما" className="w-full px-6 py-4 rounded-2xl border border-slate-200 font-bold outline-none" value={email} onBlur={handleEmailBlur} onChange={e => setEmail(e.target.value)} /></div><input type="tel" placeholder="شماره تماس" className="w-full px-6 py-4 rounded-2xl border border-slate-200 font-bold outline-none text-left" dir="ltr" value={phone} onChange={e => setPhone(e.target.value)} /><input type="text" placeholder="کد پستی" className="w-full px-6 py-4 rounded-2xl border border-slate-200 font-bold outline-none text-left" dir="ltr" value={postalCode} onChange={e => setPostalCode(e.target.value)} /><textarea rows={4} placeholder="آدرس کامل جهت ارسال پستی" className="w-full px-6 py-4 rounded-[2rem] border border-slate-200 font-bold outline-none resize-none" value={address} onChange={e => setAddress(e.target.value)} /><button onClick={handleProcessPayment} className="w-full py-6 bg-indigo-600 text-white font-black text-xl rounded-[2.5rem] shadow-2xl mt-6">تایید و پرداخت نهایی</button></div></div>
+         <div className="max-w-md mx-auto">
+           <h1 className="text-3xl font-black mb-10">اطلاعات خریدار</h1>
+           <div className="space-y-6 text-right">
+             <div className="relative"><input type="email" placeholder="ایمیل شما" className="w-full px-6 py-4 rounded-2xl border border-slate-200 font-bold outline-none focus:ring-2 focus:ring-indigo-100" value={email} onBlur={handleEmailBlur} onChange={e => setEmail(e.target.value)} /></div>
+             <input type="tel" placeholder="شماره تماس" className="w-full px-6 py-4 rounded-2xl border border-slate-200 font-bold outline-none text-left focus:ring-2 focus:ring-indigo-100" dir="ltr" value={phone} onChange={e => setPhone(e.target.value)} />
+             <input type="text" placeholder="کد پستی" className="w-full px-6 py-4 rounded-2xl border border-slate-200 font-bold outline-none text-left focus:ring-2 focus:ring-indigo-100" dir="ltr" value={postalCode} onChange={e => setPostalCode(e.target.value)} />
+             <textarea rows={4} placeholder="آدرس کامل جهت ارسال پستی" className="w-full px-6 py-4 rounded-[2rem] border border-slate-200 font-bold outline-none resize-none focus:ring-2 focus:ring-indigo-100" value={address} onChange={e => setAddress(e.target.value)} />
+             <button onClick={handleProcessPayment} className="w-full py-6 bg-indigo-600 text-white font-black text-xl rounded-[2.5rem] shadow-2xl mt-6 hover:bg-indigo-700 transition-all">تایید و پرداخت نهایی</button>
+           </div>
+         </div>
       </main>
     </div>
   );

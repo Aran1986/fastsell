@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { SalesLink, Order } from '../../types';
+import { SalesLink, Order, ShippingLabel } from '../../types';
+import { PostalService } from '../../services/postalService';
 
 interface OrderManagerProps {
   activeLink: SalesLink;
@@ -10,6 +11,8 @@ interface OrderManagerProps {
 const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [trackingInput, setTrackingInput] = useState('');
+  const [isIssuingLabel, setIsIssuingLabel] = useState(false);
+  const [showLabelPreview, setShowLabelPreview] = useState<ShippingLabel | null>(null);
 
   const handleCopyAllData = (o: Order) => {
     const text = `
@@ -32,7 +35,24 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
     setSelectedOrder(null);
   };
 
-  // Defensive check: Ensure orders is an array before calling slice
+  const handleIssuePostalLabel = async (o: Order) => {
+    setIsIssuingLabel(true);
+    try {
+      const label = await PostalService.issueShippingLabel(o);
+      setShowLabelPreview(label);
+      // Auto-update order tracking
+      onUpdateOrder?.(activeLink.id, o.id, { 
+        status: 'shipped', 
+        trackingNumber: label.trackingCode,
+        shippingLabel: label
+      });
+    } catch (e) {
+      alert('خطا در اتصال به پنل پستی. لطفاً دوباره تلاش کنید.');
+    } finally {
+      setIsIssuingLabel(false);
+    }
+  };
+
   const safeOrders = Array.isArray(activeLink.orders) ? activeLink.orders : [];
 
   return (
@@ -49,13 +69,14 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
               <th className="p-6">محصول / خریدار</th>
               <th className="p-6">مبلغ</th>
               <th className="p-6">وضعیت</th>
+              <th className="p-6">لجستیک</th>
               <th className="p-6">عملیات</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {safeOrders.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-20 text-center text-slate-300 font-bold italic">هنوز سفارشی ثبت نشده است.</td>
+                <td colSpan={5} className="p-20 text-center text-slate-300 font-bold italic">هنوز سفارشی ثبت نشده است.</td>
               </tr>
             ) : safeOrders.slice().reverse().map(o => (
               <tr key={o.id} className="hover:bg-slate-50/50 transition-all">
@@ -75,6 +96,19 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
                   </span>
                 </td>
                 <td className="p-6">
+                   {o.shippingLabel ? (
+                     <button onClick={() => setShowLabelPreview(o.shippingLabel!)} className="text-xs font-black text-indigo-600 hover:underline">مشاهده بارنامه</button>
+                   ) : (
+                     <button 
+                       disabled={isIssuingLabel}
+                       onClick={() => handleIssuePostalLabel(o)}
+                       className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"
+                     >
+                       {isIssuingLabel ? 'درحال صدور...' : 'صدور بارنامه پستی'}
+                     </button>
+                   )}
+                </td>
+                <td className="p-6">
                   <div className="flex gap-2">
                     <button onClick={() => setSelectedOrder(o)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-[10px] font-black">مدیریت</button>
                     <button onClick={() => handleCopyAllData(o)} className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-black">استخراج دیتا</button>
@@ -85,6 +119,36 @@ const OrderManager: React.FC<OrderManagerProps> = ({ activeLink, onUpdateOrder }
           </tbody>
         </table>
       </div>
+
+      {/* Label Preview Modal */}
+      {showLabelPreview && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[900] flex items-center justify-center p-4">
+           <div className="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-2xl relative text-right" dir="rtl">
+              <button onClick={() => setShowLabelPreview(null)} className="absolute top-6 left-6 text-slate-300 hover:text-red-500 font-black text-2xl">×</button>
+              <div className="flex flex-col items-center">
+                 <div className="text-3xl mb-4">📮</div>
+                 <h3 className="text-xl font-black mb-1">بارنامه پستی مرسوله</h3>
+                 <p className="text-[10px] text-slate-400 font-bold mb-8">آماده جهت چاپ و الصاق روی بسته</p>
+                 
+                 <div className="w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] p-6 space-y-4">
+                    <div className="flex justify-between border-b border-slate-200 pb-3">
+                       <span className="text-[10px] font-black text-slate-400">کد رهگیری:</span>
+                       <span className="text-xs font-black font-mono text-indigo-600">{showLabelPreview.trackingCode}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-200 pb-3">
+                       <span className="text-[10px] font-black text-slate-400">نوع سرویس:</span>
+                       <span className="text-xs font-black">{showLabelPreview.serviceType}</span>
+                    </div>
+                    <div className="flex justify-center py-4">
+                       <img src={showLabelPreview.qrCode} className="w-32 h-32 rounded-xl" alt="QR Code" />
+                    </div>
+                 </div>
+
+                 <button onClick={() => window.print()} className="w-full mt-8 py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl">چاپ بارنامه</button>
+              </div>
+           </div>
+        </div>
+      )}
 
       {selectedOrder && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[800] flex items-center justify-center p-4">

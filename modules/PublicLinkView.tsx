@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { SalesLink, Currency, Review } from '../types';
+import { SalesLink, Currency, Review, ChatMessage } from '../types';
 import { TrackingService } from '../services/trackingService';
 import { summarizeReviews } from '../services/geminiService';
 
@@ -27,6 +27,11 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
   const [notifiedProds, setNotifiedProds] = useState<Set<string>>(new Set());
   const [reviewSummary, setReviewSummary] = useState<string>('');
   const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // Chat State
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [userMsg, setUserMsg] = useState('');
 
   useEffect(() => {
     if (link) {
@@ -63,6 +68,29 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
     }
   };
 
+  const handleSendChat = () => {
+    if (!userMsg.trim()) return;
+    const newMsg: ChatMessage = {
+      id: Date.now().toString(),
+      sender: 'buyer',
+      text: userMsg,
+      timestamp: new Date().toISOString()
+    };
+    setChatMessages([...chatMessages, newMsg]);
+    setUserMsg('');
+    
+    // Simulate Seller Response after 2s
+    setTimeout(() => {
+      const sellerReply: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: 'seller',
+        text: 'سلام! پیام شما دریافت شد. در اسرع وقت پاسخ خواهیم داد.',
+        timestamp: new Date().toISOString()
+      };
+      setChatMessages(prev => [...prev, sellerReply]);
+    }, 2000);
+  };
+
   if (!link) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white text-center min-h-screen">
@@ -97,6 +125,52 @@ const PublicLinkView: React.FC<PublicLinkViewProps> = ({ links }) => {
           </div>
         </div>
       )}
+
+      {/* Floating Chat Button */}
+      <div className="fixed bottom-8 left-8 z-[200]">
+         {isChatOpen ? (
+           <div className="bg-white rounded-[2.5rem] w-[350px] h-[500px] shadow-2xl flex flex-col border border-slate-100 animate-in slide-in-from-bottom-5 duration-300">
+              <div className="p-6 bg-indigo-600 text-white rounded-t-[2.5rem] flex justify-between items-center">
+                 <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-black">🏪</div>
+                    <div className="text-xs font-black">گفتگو با فروشنده</div>
+                 </div>
+                 <button onClick={() => setIsChatOpen(false)} className="text-2xl font-black">×</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50">
+                 <div className="p-3 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-2xl text-center">
+                   سوالات خود را مستقیماً از ما بپرسید. پاسخگو هستیم!
+                 </div>
+                 {chatMessages.map(m => (
+                   <div key={m.id} className={`flex ${m.sender === 'buyer' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`p-3 rounded-2xl text-[11px] font-bold max-w-[80%] ${m.sender === 'buyer' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'}`}>
+                        {m.text}
+                      </div>
+                   </div>
+                 ))}
+              </div>
+              <div className="p-4 border-t border-slate-100 flex gap-2">
+                 <input 
+                   type="text" 
+                   value={userMsg} 
+                   onChange={e => setUserMsg(e.target.value)}
+                   onKeyPress={e => e.key === 'Enter' && handleSendChat()}
+                   placeholder="سوال شما..." 
+                   className="flex-1 bg-slate-100 px-4 py-3 rounded-xl text-xs font-bold outline-none"
+                 />
+                 <button onClick={handleSendChat} className="bg-indigo-600 text-white w-10 h-10 rounded-xl flex items-center justify-center">🚀</button>
+              </div>
+           </div>
+         ) : (
+           <button 
+             onClick={() => setIsChatOpen(true)}
+             style={{ backgroundColor: buyBtnColor }}
+             className="w-16 h-16 rounded-full text-white shadow-2xl flex items-center justify-center text-3xl hover:scale-110 transition-all active:scale-95"
+           >
+             💬
+           </button>
+         )}
+      </div>
 
       <header className="w-full max-w-2xl pt-16 pb-12 px-6 text-center z-10">
         <div className="w-32 h-32 rounded-[3rem] mx-auto border-8 border-white shadow-2xl flex items-center justify-center text-white text-5xl font-black mb-8" style={{ background: `linear-gradient(135deg, ${mainColor}, #a855f7)` }}>

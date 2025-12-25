@@ -29,7 +29,32 @@ export interface AppNotification {
   date: string;
   isRead: boolean;
   link?: string;
-  type: 'sale' | 'status_update' | 'system';
+  type: 'sale' | 'status_update' | 'system' | 'message';
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: 'buyer' | 'seller';
+  text: string;
+  timestamp: string;
+}
+
+export interface ChatSession {
+  id: string;
+  customerEmail: string;
+  productName: string;
+  messages: ChatMessage[];
+  lastMessageAt: string;
+  isUnread: boolean;
+}
+
+export interface ShippingLabel {
+  trackingCode: string;
+  serviceType: string;
+  weight: number;
+  cost: number;
+  qrCode: string;
+  issuedAt: string;
 }
 
 export interface Review {
@@ -71,6 +96,7 @@ export interface Order {
   systemFee: number;
   affiliateReward: number;
   sellerNet: number;
+  shippingLabel?: ShippingLabel;
 }
 
 export interface Product {
@@ -110,10 +136,9 @@ export interface SalesLink {
   defaultCurrency: Currency;
   categories: string[];
   bankDetails?: BankDetails;
-  // Trust & Reputation Layer (Layer 3)
   trustScore?: number;
-  reputationPoints?: number; // New: Gamified points
-  lastActiveAt?: string; // New: To track seller activity
+  reputationPoints?: number;
+  lastActiveAt?: string;
   avgResponseTimeMinutes?: number;
   deliverySuccessCount?: number;
 }

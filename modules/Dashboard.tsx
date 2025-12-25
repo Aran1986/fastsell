@@ -19,6 +19,7 @@ import SellerPower from './dashboard/SellerPower';
 import MiniCRM from './dashboard/MiniCRM';
 import MarketingManager from './dashboard/MarketingManager';
 import PromotionManager from './dashboard/PromotionManager';
+import ChatManager from './dashboard/ChatManager';
 
 interface DashboardProps {
   links: SalesLink[];
@@ -39,7 +40,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   
   // States
   const [activeLinkId, setActiveLinkId] = useState<string | null>(links[links.length - 1]?.id || null);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions' | 'chats'>('products');
   const [localLinks, setLocalLinks] = useState<SalesLink[]>(links);
 
   useEffect(() => {
@@ -77,6 +78,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     { id: 'analytics', label: 'آنالیز ترافیک', icon: '📈' },
     { id: 'promotions', label: 'پروموت و تبلیغات پولی', icon: '🚀' },
     { id: 'marketing', label: 'پیام‌رسانی هوشمند', icon: '📢' },
+    { id: 'chats', label: 'پیام‌های خریداران', icon: '💬' },
     { id: 'products', label: 'محصولات', icon: '📦' },
     { id: 'orders', label: 'سفارشات', icon: '📝' },
     { id: 'mini-crm', label: 'مینی CRM', icon: '👥' },
@@ -223,6 +225,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               {activeTab === 'analytics' && <AnalyticsOverview activeLink={activeLink} />}
               {activeTab === 'promotions' && <PromotionManager activeLink={activeLink} />}
               {activeTab === 'marketing' && <MarketingManager activeLink={activeLink} />}
+              {activeTab === 'chats' && <ChatManager activeLink={activeLink} />}
               {activeTab === 'products' && (
                 <ProductManager 
                   activeLink={activeLink} 
