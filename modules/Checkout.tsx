@@ -46,6 +46,9 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
   const [bundleProduct, setBundleProduct] = useState<(Product & { storeSlug: string, shippingFee: number }) | null>(null);
   const [includeBundle, setIncludeBundle] = useState(false);
 
+  // Simulation state for messaging bridge
+  const [messagingStatus, setMessagingStatus] = useState<string | null>(null);
+
   useEffect(() => {
     if (product && product.stock <= 0) {
       setStep('oos');
@@ -125,7 +128,17 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
       email, phone, address, postalCode, source: 'direct', 
       trafficSource: detectedSource, selectedVariants, shippingFee, totalPaid: totalAmount
     });
-    setStep('success');
+
+    // Simulate Messaging Bridge
+    if (link.integrations?.telegramChatId || link.integrations?.whatsappNumber) {
+        setMessagingStatus('در حال اطلاع‌رسانی به فروشنده...');
+        setTimeout(() => {
+            setMessagingStatus('اعلان فروش به تلگرام و واتساپ ارسال شد ✅');
+            setTimeout(() => setStep('success'), 1500);
+        }, 2000);
+    } else {
+        setStep('success');
+    }
   };
 
   if (step === 'success') {
@@ -135,6 +148,7 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
             <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-8 animate-bounce"><svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div>
             <h1 className="text-3xl font-black mb-4 text-slate-900">سفارش ثبت شد!</h1>
             <p className="text-slate-500 font-bold mb-10 text-sm">پیام تایید برای شما ارسال گردید.</p>
+            {messagingStatus && <p className="text-indigo-600 font-black text-[10px] mb-8 bg-indigo-50 px-4 py-2 rounded-full">{messagingStatus}</p>}
             {!initialProductId && <button onClick={() => navigate(`/s/${slug}`)} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black">بازگشت</button>}
         </div>
       </div>
@@ -143,6 +157,13 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
 
   return (
     <div className={`flex flex-col lg:flex-row ${!initialProductId ? 'min-h-screen bg-slate-50' : 'h-full bg-white'}`} dir="rtl">
+      {messagingStatus && step === 'paying' && (
+        <div className="fixed inset-0 z-[2000] bg-slate-900/90 flex flex-col items-center justify-center text-white text-center p-10">
+           <div className="w-20 h-20 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-8"></div>
+           <p className="text-xl font-black">{messagingStatus}</p>
+        </div>
+      )}
+
       <aside className={`lg:w-96 p-10 flex flex-col order-last lg:order-first overflow-y-auto ${!initialProductId ? 'bg-white border-l border-slate-200' : 'bg-slate-50/50'}`}>
          <h2 className="text-xl font-black mb-8">فاکتور سفارش</h2>
          <div className="space-y-4 mb-8">

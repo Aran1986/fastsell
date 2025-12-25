@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [links, setLinks] = useState<SalesLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [mappedStore, setMappedStore] = useState<SalesLink | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -27,6 +28,17 @@ const App: React.FC = () => {
       setCurrentUser(user);
       const allStores = await ApiService.getAllStores();
       setLinks(allStores);
+
+      // --- Custom Domain Logic ---
+      const hostname = window.location.hostname;
+      const isMainDomain = hostname.includes('fastsell.ir') || hostname === 'localhost';
+      
+      if (!isMainDomain) {
+        const found = allStores.find(s => s.integrations?.customDomain === hostname);
+        if (found) setMappedStore(found);
+      }
+      // ----------------------------
+
       setIsLoading(false);
     };
     init();
@@ -35,6 +47,10 @@ const App: React.FC = () => {
   const refreshData = async () => {
     const all = await ApiService.getAllStores();
     setLinks(all);
+    // Also re-check mapped store if needed
+    const hostname = window.location.hostname;
+    const found = all.find(s => s.integrations?.customDomain === hostname);
+    if (found) setMappedStore(found);
   };
 
   const handleLogin = (user: AppUser) => {
@@ -63,13 +79,46 @@ const App: React.FC = () => {
         'ورزش و سفر', 'خودرو و ابزار', 'کالاهای سوپرمارکتی', 'صنایع دستی', 'پت‌شاپ', 
         'خدمات و آموزش', 'ساعت و اکسسوری', 'طلا و جواهر', 'لوازم دکوری'
       ],
-      bankDetails: { walletAddress: '', network: 'TRC20' }
+      bankDetails: { walletAddress: '', network: 'TRC20' },
+      integrations: { enableOrderNotifs: true, telegramChatId: '', whatsappNumber: '' }
     };
     await ApiService.saveStore(newLink);
     await refreshData();
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50">...</div>;
+
+  // If this is a custom domain, ONLY render the specific store view
+  if (mappedStore) {
+    return (
+      <LanguageProvider>
+        <HashRouter>
+          <Routes>
+            <Route path="/" element={<PublicLinkView links={[mappedStore]} />} />
+            <Route path="/checkout/:slug/:productId" element={<Checkout links={[mappedStore]} onSaleSuccess={async (slug, pid, amt, data) => {
+              await ApiService.createOrder(slug, {
+                productId: pid,
+                productName: mappedStore.products.find(p => p.id === pid)?.name || 'Product',
+                amount: amt,
+                shippingFee: data.shippingFee,
+                totalPaid: data.totalPaid,
+                currency: Currency.IRR,
+                customerEmail: data.email,
+                customerPhone: data.phone,
+                customerAddress: data.address,
+                customerPostalCode: data.postalCode,
+                selectedVariants: data.selectedVariants,
+                transactionHash: data.transactionHash,
+                source: data.source
+              });
+              await refreshData();
+            }} />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </HashRouter>
+      </LanguageProvider>
+    );
+  }
 
   return (
     <LanguageProvider>

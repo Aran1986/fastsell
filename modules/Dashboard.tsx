@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { SalesLink, Product, Currency, BankDetails, Order, AppUser } from '../types';
+import { SalesLink, Product, Currency, BankDetails, Order, AppUser, Integrations } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '../services/apiService';
@@ -20,6 +20,7 @@ import MiniCRM from './dashboard/MiniCRM';
 import MarketingManager from './dashboard/MarketingManager';
 import PromotionManager from './dashboard/PromotionManager';
 import ChatManager from './dashboard/ChatManager';
+import IntegrationSettings from './dashboard/IntegrationSettings';
 
 interface DashboardProps {
   links: SalesLink[];
@@ -40,7 +41,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   
   // States
   const [activeLinkId, setActiveLinkId] = useState<string | null>(links[links.length - 1]?.id || null);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions' | 'chats'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions' | 'chats' | 'integrations'>('products');
   const [localLinks, setLocalLinks] = useState<SalesLink[]>(links);
 
   useEffect(() => {
@@ -73,12 +74,21 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     return { count: oos.length, totalNotifies: notifies };
   }, [activeLink]);
 
+  const handleUpdateIntegrations = async (linkId: string, integrations: Integrations) => {
+    const store = localLinks.find(l => l.id === linkId);
+    if (store) {
+      await ApiService.saveStore({ ...store, integrations });
+      await refreshLocalData();
+    }
+  };
+
   const sidebarItems = [
     { id: 'reputation', label: 'قدرت فروشنده', icon: '👑' },
     { id: 'analytics', label: 'آنالیز ترافیک', icon: '📈' },
     { id: 'promotions', label: 'پروموت و تبلیغات پولی', icon: '🚀' },
     { id: 'marketing', label: 'پیام‌رسانی هوشمند', icon: '📢' },
     { id: 'chats', label: 'پیام‌های خریداران', icon: '💬' },
+    { id: 'integrations', label: 'اتصال (تلگرام/واتساپ)', icon: '🔌' },
     { id: 'products', label: 'محصولات', icon: '📦' },
     { id: 'orders', label: 'سفارشات', icon: '📝' },
     { id: 'mini-crm', label: 'مینی CRM', icon: '👥' },
@@ -226,6 +236,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               {activeTab === 'promotions' && <PromotionManager activeLink={activeLink} />}
               {activeTab === 'marketing' && <MarketingManager activeLink={activeLink} />}
               {activeTab === 'chats' && <ChatManager activeLink={activeLink} />}
+              {activeTab === 'integrations' && <IntegrationSettings activeLink={activeLink} onUpdateIntegrations={handleUpdateIntegrations} />}
               {activeTab === 'products' && (
                 <ProductManager 
                   activeLink={activeLink} 

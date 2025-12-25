@@ -18,6 +18,13 @@ export interface BankDetails {
   notes?: string;
 }
 
+export interface Integrations {
+  telegramChatId?: string;
+  whatsappNumber?: string;
+  enableOrderNotifs: boolean;
+  customDomain?: string;
+}
+
 export interface ProductVariant {
   name: string;
   options: string[];
@@ -136,6 +143,7 @@ export interface SalesLink {
   defaultCurrency: Currency;
   categories: string[];
   bankDetails?: BankDetails;
+  integrations?: Integrations;
   trustScore?: number;
   reputationPoints?: number;
   lastActiveAt?: string;
