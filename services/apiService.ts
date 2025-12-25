@@ -18,14 +18,7 @@ export const ApiService = {
       if (!session || !session.user) return null;
       const { data: user } = await supabase.from('users').select('*').eq('identifier', session.user.email).maybeSingle();
       if (!user) return null;
-      return { 
-        ...user, 
-        authType: user.auth_type, 
-        registeredAt: user.registered_at, 
-        referralCode: user.referral_code, 
-        referredBy: user.referred_by, 
-        notifications: user.notifications || [] 
-      };
+      return this.mapUserData(user);
     } catch (e) { return null; }
   },
 
@@ -44,7 +37,6 @@ export const ApiService = {
       return mockUser;
     }
     
-    // In real app we use supabase.auth.signUp, for this demo we'll assume the user table insert
     const { data: newUser, error } = await supabase.from('users').insert([{
       identifier: data.identifier,
       password: data.password,
@@ -84,7 +76,6 @@ export const ApiService = {
       return saved ? JSON.parse(saved) : INITIAL_STORES;
     }
     try {
-      // Fetch stores, their products, and their orders in one go if possible
       const { data: stores, error } = await supabase
         .from('stores')
         .select('*, products(*), orders(*), reviews(*)');
@@ -108,14 +99,15 @@ export const ApiService = {
       return updatedStore.id;
     }
 
+    // FIX: Using correct camelCase properties from SalesLink interface to map to snake_case DB columns
     const dbData = {
       owner_email: store.ownerEmail,
       slug: store.slug,
       title: store.title,
       bio: store.bio,
       theme_color: store.themeColor,
-      buy_button_color: store.buy_button_color,
-      shipping_fee: store.shipping_fee,
+      buy_button_color: store.buyButtonColor,
+      shipping_fee: store.shippingFee,
       default_currency: store.defaultCurrency,
       categories: store.categories,
       bank_details: store.bankDetails,
@@ -139,8 +131,7 @@ export const ApiService = {
       return;
     }
 
-    // Get internal UUID for store
-    const { data: store } = await supabase.from('stores').select('id').eq('slug', linkId).or(`id.eq.${linkId}`).single();
+    const { data: store } = await supabase.from('stores').select('id').eq('slug', linkId).maybeSingle();
     if (!store) throw new Error("Store not found");
 
     const { error } = await supabase.from('products').insert([{
@@ -178,7 +169,6 @@ export const ApiService = {
       const newOrder: Order = { ...orderData, id: 'ord_' + Math.random().toString(36).substr(2, 9), status: 'pending', date: new Date().toISOString() };
       store.orders = store.orders || [];
       store.orders.push(newOrder);
-      // Update stock
       const prod = store.products.find(p => p.id === orderData.productId);
       if (prod) { prod.salesCount = (prod.salesCount || 0) + 1; prod.stock = Math.max(0, prod.stock - 1); }
       this.saveLocalStores(stores);
@@ -193,7 +183,7 @@ export const ApiService = {
       product_id: orderData.productId,
       product_name: orderData.productName,
       amount: orderData.amount,
-      shipping_fee: orderData.shipping_fee,
+      shipping_fee: orderData.shippingFee,
       total_paid: orderData.totalPaid,
       currency: orderData.currency,
       customer_email: orderData.customerEmail,
@@ -202,18 +192,13 @@ export const ApiService = {
       customer_postal_code: orderData.customerPostalCode,
       selected_variants: orderData.selectedVariants,
       source: orderData.source,
-      traffic_source: orderData.traffic_source
+      traffic_source: orderData.trafficSource
     }]).select().single();
 
     if (error) throw error;
-    
-    // Increment sales count and decrement stock in DB
-    await supabase.rpc('increment_product_sales', { row_id: orderData.productId });
-
     return order;
   },
 
-  // --- REVIEWS ---
   async addReview(storeSlug: string, review: Omit<Review, 'id' | 'date'>): Promise<void> {
     if (!isSupabaseConfigured) {
       const stores = this.getLocalStores();
@@ -287,9 +272,9 @@ export const ApiService = {
         rating: p.rating || 5.0,
         reviewCount: p.review_count || 0,
         isFeatured: p.is_featured,
-        variants: p.variants || []
+        variants: p.variants || [],
+        shippingMethod: p.shipping_method || 'post'
       })),
-      // Fix: Added missing required fields for Order type mapping
       orders: orders.map(o => ({
         id: o.id,
         productId: o.product_id,
@@ -302,16 +287,15 @@ export const ApiService = {
         customerPhone: o.customer_phone,
         customerAddress: o.customer_address,
         customerPostalCode: o.customer_postal_code,
-        shippingMethod: (o.shipping_method || 'post') as Order['shippingMethod'],
-        status: (o.status || 'pending') as Order['status'],
+        status: o.status || 'pending',
         date: o.created_at || o.date,
-        source: (o.source || 'direct') as Order['source'],
+        source: o.source || 'direct',
         trafficSource: o.traffic_source,
         systemFee: Number(o.system_fee) || 0,
         affiliateReward: Number(o.affiliate_reward) || 0,
-        sellerNet: Number(o.seller_net) || 0
+        sellerNet: Number(o.seller_net) || 0,
+        shippingMethod: o.shipping_method || 'post'
       })),
-      // Fix: Added missing required fields for Review type mapping
       reviews: reviews.map(r => ({
         id: r.id,
         orderId: r.order_id || 'N/A',
