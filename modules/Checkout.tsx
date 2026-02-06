@@ -200,8 +200,8 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
     }
   };
 
-  const completeOrder = async (transactionHash?: string) => {
-    onSaleSuccess(link.slug, product.id, (product.discountPrice || product.price), { 
+const completeOrder = async (transactionHash?: string) => {
+  onSaleSuccess(link.slug, product.id, (product.discountPrice || product.price), {
       email, phone, address, postalCode, source: 'direct', 
       trafficSource: detectedSource, shippingFee, totalPaid: totalAmount,
       bookingTime: requestedSlot || undefined,
@@ -377,7 +377,7 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
             <label className="block text-xs font-black text-slate-600">هش تراکنش (TX Hash):</label>
             <input
               type="text"
-              placeholder="هش تراکنش بلاک‌چین خود را اینجا وارد کنید..."
+              placeholder="هش تراکنش بلاک‌چین خود را اینجا وارد کنی��..."
               value={txHash}
               onChange={e => { setTxHash(e.target.value); setCryptoError(null); }}
               className="w-full px-5 py-4 rounded-2xl border border-slate-200 font-mono text-[11px] outline-none focus:ring-2 focus:ring-orange-200 transition-all"
@@ -438,7 +438,8 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
   }
 
   // --- MAIN CHECKOUT FORM ---
-  const checkoutContent = (
+  const renderCheckoutContent = () => {
+    return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-slate-50 text-right" dir="rtl">
       <aside className="lg:w-96 p-10 bg-white border-l border-slate-200 flex flex-col order-last lg:order-first">
         <h2 className="text-xl font-black mb-8">خلاصه فاکتور</h2>
@@ -530,7 +531,8 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
         </div>
       </main>
     </div>
-  );
+    );
+  };
 
   // Modal wrapper
   if (isModal) {
@@ -547,14 +549,14 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
             </button>
           )}
           <div className="max-h-[90vh] overflow-y-auto">
-            {checkoutContent}
+            {renderCheckoutContent()}
           </div>
         </div>
       </div>
     );
   }
 
-  return checkoutContent;
+  return renderCheckoutContent();
 };
 
 export default Checkout;

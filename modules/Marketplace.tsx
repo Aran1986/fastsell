@@ -284,10 +284,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
                                 <span className="font-black text-slate-900 text-lg">{(p.discountPrice || p.price).toLocaleString()} <span className="text-[10px] text-slate-400 font-bold">تومان</span></span>
                             </div>
                             <button 
-                              onClick={() => {
-                                console.log("[v0] Quick purchase clicked for:", p.name, "Store:", p.storeSlug);
-                                setSelectedCheckoutProduct({slug: p.storeSlug, id: p.id});
-                              }}
+                              onClick={() => setSelectedCheckoutProduct({slug: p.storeSlug, id: p.id})}
                               className="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black hover:bg-indigo-700 transition"
                             >
                               خرید سریع
@@ -311,9 +308,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
           isModal={true}
           onClose={() => setSelectedCheckoutProduct(null)}
           onSaleSuccess={(slug, productId, amount) => {
-            // Only log the success - don't close modal immediately
-            // Let the success screen show first, then user can close manually
-            console.log("[v0] Sale completed:", { slug, productId, amount });
+            // Sale completed successfully - success screen is shown in modal
           }}
         />
       )}
