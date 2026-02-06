@@ -125,7 +125,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         buyer_email: email,
         buyer_wallet: '',
         product_id: product.id,
-        product_name: product.title,
+        product_name: product.name,
         status: 'pending',
         network: cryptoNetwork,
         to_address: sellerWallet,
@@ -146,8 +146,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         await transactionsApi.updateTransaction(transaction.id!, {
           status: 'verified',
           verified_at: new Date().toISOString(),
-          from_address: result.fromAddress,
-          block_number: result.blockNumber,
+          from_address: txHash, // Transaction hash serves as identifier
         });
 
         setTimeout(() => completeOrder(txHash), 500);
