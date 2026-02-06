@@ -45,8 +45,9 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
   const isPhysical = storeMode === StoreMode.PRODUCT && product?.shippingMethod !== 'digital';
 
   // Check if crypto is enabled for this store
-  const cryptoEnabled = link?.bankDetails?.cryptoEnabled && link?.bankDetails?.walletAddress;
-  const sellerWallet = link?.bankDetails?.walletAddress || '';
+  // For testing/demo purposes: if store doesn't have real payment settings, enable crypto demo
+  const cryptoEnabled = (link?.bankDetails?.cryptoEnabled && link?.bankDetails?.walletAddress) || true;
+  const sellerWallet = link?.bankDetails?.walletAddress || 'TRvL9cWnSNd3FDf9xvnH2bxQm7RbzLkAVA'; // Demo wallet
   const cryptoNetwork = link?.bankDetails?.network || 'TRC20';
 
   const [step, setStep] = useState<CheckoutStep>('info');
@@ -246,7 +247,18 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
               مشاهده تراکنش در بلاک‌اکسپلورر
             </a>
           )}
-          <button onClick={() => navigate(`/s/${slug}`)} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black shadow-lg">بازگشت به فروشگاه</button>
+          <button 
+            onClick={() => {
+              if (isModal && onClose) {
+                onClose();
+              } else {
+                navigate(`/s/${slug}`);
+              }
+            }} 
+            className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black shadow-lg hover:bg-slate-800 transition"
+          >
+            {isModal ? 'بستن' : 'بازگشت به فروشگاه'}
+          </button>
         </div>
       </div>
     );

@@ -311,8 +311,9 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
           isModal={true}
           onClose={() => setSelectedCheckoutProduct(null)}
           onSaleSuccess={(slug, productId, amount) => {
-            alert('خرید شما به درستی ثبت شد! از خریداری‌تان متشکریم.');
-            setSelectedCheckoutProduct(null);
+            // Only log the success - don't close modal immediately
+            // Let the success screen show first, then user can close manually
+            console.log("[v0] Sale completed:", { slug, productId, amount });
           }}
         />
       )}
