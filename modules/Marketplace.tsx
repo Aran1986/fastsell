@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { SalesLink, Product, Currency, ChatMessage } from '../types';
 import Header from '../components/Header';
 import Comparison from './Comparison';
-import Checkout from './Checkout';
+import CheckoutModal from './CheckoutModal';
 import { TrackingService } from '../services/trackingService';
 import { ReputationService } from '../services/reputationService';
 import { ApiService } from '../services/apiService';
@@ -283,7 +283,12 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
                                 {hasDiscount && <span className="text-xs text-orange-500 line-through font-black mb-1">{p.price.toLocaleString()}</span>}
                                 <span className="font-black text-slate-900 text-lg">{(p.discountPrice || p.price).toLocaleString()} <span className="text-[10px] text-slate-400 font-bold">تومان</span></span>
                             </div>
-                            <button className="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black">خرید سریع</button>
+                            <button 
+                              onClick={() => setSelectedCheckoutProduct({slug: p.storeSlug, id: p.id})}
+                              className="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black hover:bg-indigo-700 transition"
+                            >
+                              خرید سریع
+                            </button>
                          </div>
                       </div>
                     </div>
@@ -293,6 +298,19 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
            </div>
         </div>
       </main>
+
+      {/* Checkout Modal */}
+      {selectedCheckoutProduct && (
+        <CheckoutModal
+          links={links}
+          initialStoreSlug={selectedCheckoutProduct.slug}
+          initialProductId={selectedCheckoutProduct.id}
+          onClose={() => setSelectedCheckoutProduct(null)}
+          onSaleSuccess={(slug, productId, amount) => {
+            // Sale completed successfully
+          }}
+        />
+      )}
     </div>
   );
 };

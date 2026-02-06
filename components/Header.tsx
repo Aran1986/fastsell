@@ -40,6 +40,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, user }) => {
 
   const navLinks = [
     { to: "/marketplace", label: "ویترین" },
+    { to: "/pricing", label: "قیمت‌گذاری" },
     { to: "/features", label: "قابلیت‌ها" },
     { to: "/database", label: "دیتابیس" },
     { to: "/tech-debts", label: "بدهی فنی" },
