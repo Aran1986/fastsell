@@ -178,8 +178,7 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
         await transactionsApi.updateTransaction(transaction.id!, {
           status: 'verified',
           verified_at: new Date().toISOString(),
-          from_address: result.fromAddress,
-          block_number: result.blockNumber,
+          from_address: txHash,
         });
 
         setTimeout(() => completeOrder(txHash), 500);

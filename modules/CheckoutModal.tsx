@@ -111,7 +111,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }, 500);
 
     try {
-      const sellerSettings = await paymentSettingsApi.getSettingsByEmail(link.email || '');
+      const sellerSettings = await paymentSettingsApi.getSettingsByEmail(link.ownerEmail || '');
       if (!sellerSettings) {
         throw new Error('تنظیمات فروشنده یافت نشد');
       }
@@ -389,7 +389,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {step === 'success' && (
             <div className="space-y-6 text-center">
               <div className="text-6xl">✓</div>
-              <h2 className="text-2xl font-black text-green-600">خرید شما تکمیل شد!</h2>
+              <h2 className="text-2xl font-black text-green-600">خرید شم�� تکمیل شد!</h2>
               <p className="text-slate-600">از خریداری‌تان سپاس‌گزاریم. اطلاعات سفارش به ایمیل شما ارسال می‌شود.</p>
 
               {paymentMethod === 'crypto' && txHash && (
