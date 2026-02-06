@@ -22,12 +22,14 @@ interface CheckoutProps {
   }) => void;
   initialProductId?: string;
   initialStoreSlug?: string;
+  onClose?: () => void;
+  isModal?: boolean;
 }
 
 type PaymentMethod = 'fiat' | 'crypto';
 type CheckoutStep = 'info' | 'payment-select' | 'crypto-pay' | 'crypto-verifying' | 'paying' | 'success' | 'oos' | 'error';
 
-const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProductId, initialStoreSlug }) => {
+const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProductId, initialStoreSlug, onClose, isModal = false }) => {
   const { slug: urlSlug, productId: urlProductId } = useParams<{ slug: string, productId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -424,7 +426,7 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
   }
 
   // --- MAIN CHECKOUT FORM ---
-  return (
+  const checkoutContent = (
     <div className="flex flex-col lg:flex-row min-h-screen bg-slate-50 text-right" dir="rtl">
       <aside className="lg:w-96 p-10 bg-white border-l border-slate-200 flex flex-col order-last lg:order-first">
         <h2 className="text-xl font-black mb-8">خلاصه فاکتور</h2>
@@ -517,6 +519,30 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
       </main>
     </div>
   );
+
+  // Modal wrapper
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-[2rem] shadow-2xl max-w-6xl w-full my-8 relative">
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="absolute top-6 left-6 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600 font-black transition-colors z-10"
+              title="بستن"
+            >
+              ×
+            </button>
+          )}
+          <div className="max-h-[90vh] overflow-y-auto">
+            {checkoutContent}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return checkoutContent;
 };
 
 export default Checkout;
