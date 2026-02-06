@@ -139,7 +139,7 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
 
     try {
       // First, get seller payment settings to find seller_id
-      const sellerSettings = await paymentSettingsApi.getSettingsByEmail(link.email || '');
+      const sellerSettings = await paymentSettingsApi.getSettingsByEmail(link.ownerEmail || '');
       if (!sellerSettings) {
         throw new Error('تنظیمات فروشنده یافت نشد');
       }
@@ -154,7 +154,7 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
         buyer_email: email,
         buyer_wallet: '', // Could be extracted from blockchain if needed
         product_id: product.id,
-        product_name: product.title,
+        product_name: product.name,
         status: 'pending',
         network: cryptoNetwork,
         to_address: sellerWallet,
