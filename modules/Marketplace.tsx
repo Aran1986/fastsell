@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { SalesLink, Product, Currency, ChatMessage } from '../types';
 import Header from '../components/Header';
 import Comparison from './Comparison';
-import Checkout from './Checkout';
+import CheckoutModal from './CheckoutModal';
 import { TrackingService } from '../services/trackingService';
 import { ReputationService } from '../services/reputationService';
 import { ApiService } from '../services/apiService';
@@ -301,14 +301,13 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
 
       {/* Checkout Modal */}
       {selectedCheckoutProduct && (
-        <Checkout
+        <CheckoutModal
           links={links}
           initialStoreSlug={selectedCheckoutProduct.slug}
           initialProductId={selectedCheckoutProduct.id}
-          isModal={true}
           onClose={() => setSelectedCheckoutProduct(null)}
           onSaleSuccess={(slug, productId, amount) => {
-            // Sale completed successfully - success screen is shown in modal
+            // Sale completed successfully
           }}
         />
       )}
