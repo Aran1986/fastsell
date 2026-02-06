@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SalesLink, BankDetails } from '../../types';
+import { paymentSettingsApi } from '../../services/paymentApiService';
+import { supabase } from '../../services/supabaseClient';
 
 interface PaymentSettingsProps {
   activeLink: SalesLink;
@@ -62,7 +64,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ activeLink, onUpdateB
     }
   }, [bankData.walletAddress, bankData.network]);
 
-  const handleSaveBank = useCallback(() => {
+  const handleSaveBank = useCallback(async () => {
     setSaveStatus('saving');
     
     // Determine active gateways
@@ -75,10 +77,21 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ activeLink, onUpdateB
     const finalData: BankDetails = { ...bankData, activeGateways };
     
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('کاربر احراز هویت نشده است');
+      }
+
+      // Save to database
+      await paymentSettingsApi.saveSettings(user.id, user.email || '', finalData);
+      
+      // Also update local state
       onUpdateBankDetails(activeLink.id, finalData);
+      
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch {
+    } catch (error) {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }

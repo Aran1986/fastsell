@@ -21,6 +21,7 @@ import MarketingManager from './dashboard/MarketingManager';
 import PromotionManager from './dashboard/PromotionManager';
 import ChatManager from './dashboard/ChatManager';
 import CommunicationBridges from './dashboard/CommunicationBridges';
+import CryptoTransactions from './dashboard/CryptoTransactions';
 
 interface DashboardProps {
   links: SalesLink[];
@@ -41,7 +42,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   
   // States
   const [activeLinkId, setActiveLinkId] = useState<string | null>(links[links.length - 1]?.id || null);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions' | 'chats' | 'bridges'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'manage-links' | 'profile' | 'appearance' | 'bank' | 'purchases' | 'affiliate' | 'finance' | 'analytics' | 'reputation' | 'mini-crm' | 'marketing' | 'promotions' | 'chats' | 'bridges' | 'crypto-tx'>('products');
   const [localLinks, setLocalLinks] = useState<SalesLink[]>(links);
 
   useEffect(() => {
@@ -111,6 +112,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
     { id: 'bank', label: 'تنظیمات پرداخت', icon: '🏦' },
     { id: 'appearance', label: 'ظاهر و تم', icon: '🎨' },
     { id: 'finance', label: 'هاب مالی', icon: '💰' },
+    { id: 'crypto-tx', label: 'تراکنش‌های کریپتو', icon: '₿' },
   ];
 
   return (
@@ -236,10 +238,11 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
               {activeTab === 'mini-crm' && <MiniCRM activeLink={activeLink} />}
               {activeTab === 'manage-links' && <LinkManager activeLink={activeLink} refreshData={refreshLocalData} />}
               {activeTab === 'profile' && <ProfileManager activeLink={activeLink} onUpdateProfile={props.onUpdateProfile} />}
-              {activeTab === 'bank' && <PaymentSettings activeLink={activeLink} onUpdateBankDetails={props.onUpdateBankDetails} />}
-              {activeTab === 'appearance' && <AppearanceSettings activeLink={activeLink} onUpdateThemeColor={props.onUpdateThemeColor} />}
-              {activeTab === 'finance' && <FinanceHub activeLink={activeLink} allUsers={[]} allStores={allLinksForPurchases} currentUser={currentUser} />}
-            </div>
+  {activeTab === 'bank' && <PaymentSettings activeLink={activeLink} onUpdateBankDetails={props.onUpdateBankDetails} />}
+  {activeTab === 'appearance' && <AppearanceSettings activeLink={activeLink} onUpdateThemeColor={props.onUpdateThemeColor} />}
+  {activeTab === 'finance' && <FinanceHub activeLink={activeLink} allUsers={[]} allStores={allLinksForPurchases} currentUser={currentUser} />}
+  {activeTab === 'crypto-tx' && <CryptoTransactions />}
+  </div>
           ) : (
             <div className="bg-white rounded-[2.5rem] p-20 border border-slate-200 shadow-sm text-center flex flex-col items-center">
                <div className="text-6xl mb-6">🏜️</div>

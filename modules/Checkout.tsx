@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { SalesLink, Currency, StoreMode } from '../types';
 import { ApiService } from '../services/apiService';
 import { verifyCryptoHash, getExplorerUrl } from '../services/paymentService';
+import { paymentSettingsApi, transactionsApi } from '../services/paymentApiService';
 
 interface CheckoutProps {
   links: SalesLink[];
@@ -134,18 +135,62 @@ const Checkout: React.FC<CheckoutProps> = ({ links, onSaleSuccess, initialProduc
     }, 500);
 
     try {
+      // First, get seller payment settings to find seller_id
+      const sellerSettings = await paymentSettingsApi.getSettingsByEmail(link.email || '');
+      if (!sellerSettings) {
+        throw new Error('تنظیمات فروشنده یافت نشد');
+      }
+
+      // Create transaction record
+      const transaction = await transactionsApi.createTransaction({
+        tx_hash: txHash,
+        payment_method: 'crypto',
+        amount: totalAmount,
+        currency: 'USDT',
+        seller_id: sellerSettings.seller_id,
+        buyer_email: email,
+        buyer_wallet: '', // Could be extracted from blockchain if needed
+        product_id: product.id,
+        product_name: product.title,
+        status: 'pending',
+        network: cryptoNetwork,
+        to_address: sellerWallet,
+        metadata: {
+          phone,
+          address: isPhysical ? address : undefined,
+          postalCode: isPhysical ? postalCode : undefined,
+          shippingFee,
+          trafficSource: detectedSource,
+        },
+      });
+
+      // Verify transaction on blockchain
       const result = await verifyCryptoHash(txHash, sellerWallet, totalAmount, cryptoNetwork);
       
       clearInterval(progressInterval);
       setVerificationProgress(100);
 
       if (result.verified) {
+        // Update transaction status to verified
+        await transactionsApi.updateTransaction(transaction.id!, {
+          status: 'verified',
+          verified_at: new Date().toISOString(),
+          from_address: result.fromAddress,
+          block_number: result.blockNumber,
+        });
+
         setTimeout(() => completeOrder(txHash), 500);
       } else {
+        // Update transaction as failed
+        await transactionsApi.updateTransaction(transaction.id!, {
+          status: 'failed',
+          error_message: result.error || 'Verification failed',
+        });
+
         setCryptoError(result.error || 'تراکنش تایید نشد. لطفا هش صحیح را وارد کنید یا منتظر تایید شبکه بمانید.');
         setStep('crypto-pay');
       }
-    } catch {
+    } catch (error) {
       clearInterval(progressInterval);
       setCryptoError('خطا در ارتباط با شبکه بلاک‌چین. لطفا مجددا تلاش کنید.');
       setStep('crypto-pay');
