@@ -17,13 +17,19 @@ interface Campaign {
   status: 'sent' | 'scheduled';
 }
 
+interface AutomationRule {
+  id: string;
+  title: string;
+  desc: string;
+  icon: string;
+  active: boolean;
+  stats: string;
+}
+
 const MarketingManager: React.FC<MarketingManagerProps> = ({ activeLink }) => {
   const [activeSubTab, setActiveSubTab] = useState<'campaign' | 'automation' | 'history' | 'global'>('campaign');
   
-  // User Plan Mock
-  const userPlan = 'Max+';
-
-  // Campaign States
+  // --- Campaign States ---
   const [content, setContent] = useState('');
   const [type, setType] = useState<'sms' | 'email' | 'whatsapp' | 'telegram'>('sms');
   const [audience, setAudience] = useState<'all' | 'repeat' | 'specific' | 'manual'>('all');
@@ -31,13 +37,23 @@ const MarketingManager: React.FC<MarketingManagerProps> = ({ activeLink }) => {
   const [isSending, setIsSending] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Aggregated Customers
+  // --- Automation States ---
+  const [automations, setAutomations] = useState<AutomationRule[]>([
+    { id: 'welcome', title: 'پیام خوش‌آمدگویی', desc: 'ارسال خودکار کد تخفیف ۵٪ پس از اولین ثبت‌نام یا خرید.', icon: '👋', active: true, stats: '۱۲۵ ارسال' },
+    { id: 'cart', title: 'بازیابی سبد خرید', desc: 'یادآوری به مشتریانی که خرید را نهایی نکردند (۱ ساعت بعد).', icon: '🛒', active: false, stats: '۰ ارسال' },
+    { id: 'review', title: 'درخواست ثبت نظر', desc: 'ارسال لینک نظرسنجی ۳ روز پس از تحویل موفق سفارش.', icon: '⭐', active: true, stats: '۸۴ ارسال' },
+    { id: 'winback', title: 'بازگشت مشتری', desc: 'ارسال پیشنهاد ویژه به مشتریانی که ۴۵ روز خرید نکرده‌اند.', icon: 'k', active: false, stats: '۰ ارسال' },
+  ]);
+
+  // --- Global AI States ---
+  const [aiStatus, setAiStatus] = useState<'idle' | 'scanning' | 'ready'>('idle');
+
+  // Aggregated Customers Logic
   const allUniqueCustomers = useMemo(() => {
     const orders = activeLink.orders || [];
     const customerMap: Record<string, { email: string; phone: string; optedOut?: boolean }> = {};
     orders.forEach(o => {
-      // Simulation: Assume 20% of users have opted out of marketing in their Bridge settings
-      const hasOptedOut = Math.random() < 0.2;
+      const hasOptedOut = Math.random() < 0.2; // Simulation
       customerMap[o.customerEmail] = { email: o.customerEmail, phone: o.customerPhone, optedOut: hasOptedOut };
     });
     return Object.values(customerMap);
@@ -63,6 +79,8 @@ const MarketingManager: React.FC<MarketingManagerProps> = ({ activeLink }) => {
     return allUniqueCustomers.filter(c => c.optedOut).length;
   }, [allUniqueCustomers, audience, manualSelectedEmails]);
 
+  // --- Handlers ---
+
   const handleAISuggestion = async () => {
     setIsGenerating(true);
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -82,7 +100,7 @@ const MarketingManager: React.FC<MarketingManagerProps> = ({ activeLink }) => {
   const toggleManualSelection = (email: string) => {
     const cust = allUniqueCustomers.find(c => c.email === email);
     if (cust?.optedOut) {
-      alert('این کاربر در تنظیمات «پل ارتباطی» خود، دریافت پیام‌های تبلیغاتی را مسدود کرده است و امکان افزودن به لیست وجود ندارد.');
+      alert('این کاربر دریافت پیام‌های تبلیغاتی را مسدود کرده است.');
       return;
     }
     const newSet = new Set(manualSelectedEmails);
@@ -97,23 +115,26 @@ const MarketingManager: React.FC<MarketingManagerProps> = ({ activeLink }) => {
     
     setIsSending(true);
     setTimeout(() => {
-      const newCampaign: Campaign = {
-        id: Math.random().toString(36).substr(2, 9),
-        title: content.substring(0, 20) + '...',
-        content,
-        type,
-        audience: `${reachableCustomers.length} نفر`,
-        date: new Date().toLocaleDateString('fa-IR'),
-        status: 'sent'
-      };
       setContent('');
       setIsSending(false);
       alert(`ارسال با موفقیت انجام شد. (${reachableCustomers.length} پیام ارسال گردید)`);
     }, 2000);
   };
 
+  const toggleAutomation = (id: string) => {
+    setAutomations(prev => prev.map(a => a.id === id ? { ...a, active: !a.active } : a));
+  };
+
+  const startAiScan = () => {
+    setAiStatus('scanning');
+    setTimeout(() => {
+      setAiStatus('ready');
+    }, 3000);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 text-right" dir="rtl">
+      {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-2 bg-white p-2 rounded-[2rem] border border-slate-200 shadow-sm w-fit mx-auto lg:mx-0">
         <button onClick={() => setActiveSubTab('campaign')} className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeSubTab === 'campaign' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}>کمپین جدید 🚀</button>
         <button onClick={() => setActiveSubTab('automation')} className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeSubTab === 'automation' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}>اتوماسیون ✨</button>
@@ -121,6 +142,7 @@ const MarketingManager: React.FC<MarketingManagerProps> = ({ activeLink }) => {
         <button onClick={() => setActiveSubTab('history')} className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${activeSubTab === 'history' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}>تاریخچه 📜</button>
       </div>
 
+      {/* --- TAB: NEW CAMPAIGN --- */}
       {activeSubTab === 'campaign' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm space-y-6">
@@ -197,8 +219,131 @@ const MarketingManager: React.FC<MarketingManagerProps> = ({ activeLink }) => {
           </div>
         </div>
       )}
-      
-      {/* Rest of components (automation, history) remain similar but with expanded UI for WA/TG */}
+
+      {/* --- TAB: AUTOMATION --- */}
+      {activeSubTab === 'automation' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-4">
+          {automations.map(auto => (
+            <div key={auto.id} className={`p-8 rounded-[3rem] border-2 transition-all duration-300 ${auto.active ? 'bg-white border-indigo-600 shadow-xl' : 'bg-slate-50 border-transparent opacity-80'}`}>
+               <div className="flex justify-between items-start mb-6">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm ${auto.active ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-200 text-slate-400'}`}>
+                    {auto.icon}
+                  </div>
+                  <div className="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name={`toggle-${auto.id}`} id={`toggle-${auto.id}`} checked={auto.active} onChange={() => toggleAutomation(auto.id)} className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300" style={{ right: auto.active ? '0' : '50%', borderColor: auto.active ? '#4f46e5' : '#cbd5e1' }}/>
+                    <label htmlFor={`toggle-${auto.id}`} className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${auto.active ? 'bg-indigo-600' : 'bg-slate-300'}`}></label>
+                  </div>
+               </div>
+               <h4 className={`text-lg font-black mb-2 ${auto.active ? 'text-slate-900' : 'text-slate-500'}`}>{auto.title}</h4>
+               <p className="text-xs text-slate-500 font-bold leading-relaxed mb-6 h-10">{auto.desc}</p>
+               <div className={`text-[10px] font-black px-4 py-2 rounded-xl inline-block ${auto.active ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-200 text-slate-500'}`}>
+                  وضعیت: {auto.stats}
+               </div>
+            </div>
+          ))}
+          
+          <div className="col-span-1 md:col-span-2 p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100 flex items-start gap-4">
+             <span className="text-2xl">⚡</span>
+             <div>
+                <h4 className="font-black text-amber-900 text-sm">نکته مهم</h4>
+                <p className="text-[10px] font-bold text-amber-700 leading-relaxed mt-1">
+                  اتوماسیون‌ها به صورت خودکار و بدون نیاز به دخالت شما اجرا می‌شوند. هزینه هر پیامک به صورت خودکار از موجودی کیف پول کسر می‌گردد.
+                </p>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- TAB: GLOBAL AI TARGETING --- */}
+      {activeSubTab === 'global' && (
+        <div className="bg-slate-900 text-white rounded-[3.5rem] p-12 relative overflow-hidden shadow-2xl animate-in zoom-in-95">
+           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/20 blur-[150px] rounded-full"></div>
+           
+           <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto space-y-8">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-5xl shadow-[0_0_50px_rgba(99,102,241,0.5)] animate-pulse">
+                 {aiStatus === 'scanning' ? '📡' : '🧠'}
+              </div>
+              
+              <div>
+                 <h2 className="text-4xl font-black mb-4">هدف‌گیری هوشمند سراسری (Global AI)</h2>
+                 <p className="text-indigo-200 font-bold text-lg leading-relaxed">
+                   هوش مصنوعی ما با تحلیل رفتار خریداران در کل پلتفرم، مشتریانی را که الگوی خرید مشابه با محصولات شما دارند شناسایی و تبلیغ شما را فقط برای آن‌ها ارسال می‌کند.
+                 </p>
+              </div>
+
+              {aiStatus === 'idle' && (
+                <button onClick={startAiScan} className="bg-white text-slate-900 px-12 py-5 rounded-[2rem] font-black text-xl hover:scale-105 transition-transform shadow-xl">
+                  شروع اسکن شبکه مشتریان 🔎
+                </button>
+              )}
+
+              {aiStatus === 'scanning' && (
+                <div className="space-y-4 w-full">
+                   <div className="h-2 bg-slate-800 rounded-full overflow-hidden w-full max-w-md mx-auto">
+                      <div className="h-full bg-indigo-500 animate-[progress_2s_ease-in-out_infinite]" style={{ width: '50%' }}></div>
+                   </div>
+                   <p className="text-xs font-mono text-indigo-300">در حال تحلیل ۱۲,۴۵۰ نقطه داده...</p>
+                </div>
+              )}
+
+              {aiStatus === 'ready' && (
+                <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/20 w-full animate-in slide-in-from-bottom-4">
+                   <div className="flex justify-around mb-8 text-center">
+                      <div>
+                         <div className="text-3xl font-black text-green-400">۱,۴۲۰</div>
+                         <div className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">مخاطب بالقوه</div>
+                      </div>
+                      <div>
+                         <div className="text-3xl font-black text-indigo-400">۸۵٪</div>
+                         <div className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">تطابق سلیقه</div>
+                      </div>
+                   </div>
+                   <button className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-indigo-500 transition-colors">
+                      ارسال کمپین هوشمند (۳۵۰,۰۰۰ تومان)
+                   </button>
+                </div>
+              )}
+           </div>
+        </div>
+      )}
+
+      {/* --- TAB: HISTORY --- */}
+      {activeSubTab === 'history' && (
+        <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm animate-in fade-in">
+           <div className="p-8 border-b border-slate-50">
+              <h3 className="text-xl font-black text-slate-900">تاریخچه کمپین‌ها</h3>
+           </div>
+           <div className="overflow-x-auto">
+              <table className="w-full text-right">
+                 <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase">
+                    <tr>
+                       <th className="p-6">عنوان کمپین</th>
+                       <th className="p-6">کانال</th>
+                       <th className="p-6">تعداد مخاطب</th>
+                       <th className="p-6">تاریخ</th>
+                       <th className="p-6">وضعیت</th>
+                    </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-100">
+                    <tr className="hover:bg-slate-50/50">
+                       <td className="p-6 font-bold text-slate-800">تخفیف یلدایی</td>
+                       <td className="p-6"><span className="bg-sky-100 text-sky-600 px-3 py-1 rounded-lg text-[10px] font-black">SMS</span></td>
+                       <td className="p-6 font-mono text-slate-600">124 نفر</td>
+                       <td className="p-6 text-xs text-slate-500">1402/09/30</td>
+                       <td className="p-6"><span className="text-green-600 text-[10px] font-black">✅ انجام شده</span></td>
+                    </tr>
+                    <tr className="hover:bg-slate-50/50">
+                       <td className="p-6 font-bold text-slate-800">معرفی محصول جدید</td>
+                       <td className="p-6"><span className="bg-green-100 text-green-600 px-3 py-1 rounded-lg text-[10px] font-black">Whatsapp</span></td>
+                       <td className="p-6 font-mono text-slate-600">45 نفر</td>
+                       <td className="p-6 text-xs text-slate-500">1402/10/15</td>
+                       <td className="p-6"><span className="text-green-600 text-[10px] font-black">✅ انجام شده</span></td>
+                    </tr>
+                 </tbody>
+              </table>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

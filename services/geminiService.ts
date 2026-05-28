@@ -1,23 +1,30 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
+import { StoreMode } from "../types";
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const generateProductDescription = async (productName: string): Promise<string> => {
+export const generateProductDescription = async (name: string, mode: StoreMode): Promise<string> => {
   const ai = getAI();
+  let instruction = "";
+  
+  if (mode === StoreMode.PRODUCT) {
+    instruction = `یک متن تبلیغاتی کوتاه (حداکثر ۲ جمله) برای فروش کالای "${name}" بنویسید که روی کیفیت و ارسال متمرکز باشد.`;
+  } else if (mode === StoreMode.SERVICE) {
+    instruction = `یک متن جذاب برای معرفی خدمات "${name}" بنویسید که روی تخصص و نتیجه نهایی تمرکز کند. (مثلاً برای کلاس آموزشی یا خدمات فنی)`;
+  } else if (mode === StoreMode.BOOKING) {
+    instruction = `یک متن ترغیب‌کننده برای رزرو نوبت "${name}" بنویسید که روی تجربه عالی و نظم در زمان‌بندی تاکید کند. (مثلاً برای آرایشگاه یا مشاوره)`;
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `شما یک کپی‌رایتر حرفه‌ای فروشگاه‌های اینترنتی هستید. یک متن کوتاه، متقاعدکننده و جذاب برای محصولی به نام "${productName}" بنویسید. متن باید حداکثر ۲ جمله باشد و خریدار را ترغیب به خرید کند. فقط متن فارسی برگردانید.`,
-      config: {
-        temperature: 0.8,
-        topP: 0.9,
-      },
+      contents: instruction + " فقط متن فارسی برگردانید.",
+      config: { temperature: 0.7 }
     });
-    return response.text?.trim() || "محصولی با کیفیت عالی که قطعا عاشقش خواهید شد!";
+    return response.text?.trim() || "تجربه‌ای متفاوت و حرفه‌ای با ما.";
   } catch (error) {
-    console.error("Gemini Error:", error);
-    return "یک انتخاب فوق‌العاده برای شما!";
+    return "بهترین کیفیت در ارائه خدمات و محصولات.";
   }
 };
 
@@ -27,12 +34,11 @@ export const summarizeReviews = async (reviews: string[]): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `این نظرات مشتریان در مورد یک محصول است. لطفا آن‌ها را تحلیل کرده و در ۲ جمله کوتاه به زبان فارسی بگویید خریداران به طور کلی چه حسی دارند و نقاط قوت اصلی چیست: \n${reviews.join('\n')}`,
-      config: { temperature: 0.5 }
+      contents: `این نظرات مشتریان است. در ۲ جمله کوتاه به زبان فارسی تحلیل کنید خریداران به طور کلی چه حسی دارند: \n${reviews.join('\n')}`,
     });
-    return response.text?.trim() || "خریداران از کیفیت محصول رضایت دارند.";
+    return response.text?.trim() || "رضایت مشتریان در سطح بالایی قرار دارد.";
   } catch (e) {
-    return "تحلیل نظرات در حال حاضر مقدور نیست.";
+    return "تحلیل نظرات مقدور نیست.";
   }
 };
 
@@ -41,14 +47,11 @@ export const checkReviewSpam = async (text: string): Promise<{ isSpam: boolean; 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `آیا متن زیر یک نظر اسپم، توهین‌آمیز، تبلیغاتی یا کاملاً بی‌ربط به خرید محصول است؟ پاسخ را فقط به صورت JSON با ساختار {"isSpam": boolean, "reason": "علت به فارسی"} برگردانید. متن نظر: "${text}"`,
-      config: { 
-        responseMimeType: "application/json",
-        temperature: 0.1 
-      }
+      contents: `آیا این نظر اسپم یا بی‌ربط است؟ پاسخ فقط JSON: {"isSpam": boolean, "reason": "فارسی"}. متن: "${text}"`,
+      config: { responseMimeType: "application/json" }
     });
     return JSON.parse(response.text || '{"isSpam": false}');
   } catch (e) {
-    return { isSpam: false }; // در صورت خطا، سخت‌گیری نمی‌کنیم
+    return { isSpam: false };
   }
 };

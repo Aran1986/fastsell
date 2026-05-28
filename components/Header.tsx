@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from './Logo';
 import { useLanguage } from '../context/LanguageContext';
-import { AppUser, SalesLink, Product } from '../types';
+import { AppUser, SalesLink } from '../types';
 import { ApiService } from '../services/apiService';
 
 interface HeaderProps {
@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, user }) => {
 
   const navLinks = [
     { to: "/marketplace", label: "ویترین" },
-    { to: "/pricing", label: "قیمت‌گذاری" },
+    { to: "/pricing", label: "قیمت‌ها" },
     { to: "/features", label: "قابلیت‌ها" },
     { to: "/database", label: "دیتابیس" },
     { to: "/tech-debts", label: "بدهی فنی" },

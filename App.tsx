@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SalesLink, Product, Currency, AppUser, StoreMode } from './types';
+import { SalesLink, AppUser, StoreMode, Currency } from './types';
 import { LanguageProvider } from './context/LanguageContext';
 import { ApiService } from './services/apiService';
 
@@ -113,7 +113,8 @@ const App: React.FC = () => {
                 customerPostalCode: data.postalCode,
                 selectedVariants: data.selectedVariants,
                 transactionHash: data.transactionHash,
-                source: data.source
+                source: data.source,
+                bookingTime: data.bookingTime
               });
               await refreshData();
             }} />} />
@@ -194,7 +195,8 @@ const App: React.FC = () => {
                 customerPostalCode: data.postalCode,
                 selectedVariants: data.selectedVariants,
                 transactionHash: data.transactionHash,
-                source: data.source
+                source: data.source,
+                bookingTime: data.bookingTime
               });
               await refreshData();
             }} />} />

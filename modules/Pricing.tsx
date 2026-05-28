@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +22,7 @@ const Pricing: React.FC = () => {
         'کف برداشت: 500,000 تومان'
       ],
       cta: 'شروع رایگان',
+      color: 'slate',
       highlight: false
     },
     {
@@ -38,6 +40,7 @@ const Pricing: React.FC = () => {
         'کف برداشت: 500,000 تومان'
       ],
       cta: 'انتخاب پلن استارتر',
+      color: 'indigo',
       highlight: false
     },
     {
@@ -55,6 +58,7 @@ const Pricing: React.FC = () => {
         'کف برداشت: 300,000 تومان'
       ],
       cta: 'انتخاب پلن پرو',
+      color: 'purple',
       highlight: true
     },
     {
@@ -72,6 +76,7 @@ const Pricing: React.FC = () => {
         'کف برداشت: 100,000 تومان'
       ],
       cta: 'انتخاب پلن مکس',
+      color: 'orange',
       highlight: false
     },
     {
@@ -86,6 +91,7 @@ const Pricing: React.FC = () => {
         'دامنه اختصاصی رایگان (.ir)'
       ],
       cta: 'انتخاب پلن مکس پلاس',
+      color: 'zinc',
       highlight: false
     }
   ];
@@ -129,7 +135,7 @@ const Pricing: React.FC = () => {
                 <ul className="space-y-4 mb-10">
                   {plan.features.map((f, i) => (
                     <li key={i} className="flex items-start gap-3 text-[11px] font-bold text-slate-600 leading-relaxed">
-                      <span className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${plan.highlight ? 'bg-indigo-100 text-indigo-600' : 'bg-green-50 text-green-600'}`}>{'✓'}</span>
+                      <span className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${plan.highlight ? 'bg-indigo-100 text-indigo-600' : 'bg-green-50 text-green-600'}`}>✓</span>
                       {f}
                     </li>
                   ))}

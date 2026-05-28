@@ -29,25 +29,15 @@ export interface ChannelPrefs {
 }
 
 export interface BankDetails {
-  // ZarinPal / Iranian Banking
   cardNumber?: string;
   accountNumber?: string;
   iban?: string;
   holderName?: string;
-  zarinpalMerchantId?: string;
-  // Stripe
-  stripeKey?: string;
-  // PayPal
   paypalEmail?: string;
-  paypalClientId?: string;
-  // Crypto
+  stripeKey?: string;
   walletAddress?: string;
   network?: string;
-  cryptoEnabled?: boolean;
-  // General
   notes?: string;
-  // Active gateways tracking
-  activeGateways?: string[];
 }
 
 export interface Integrations {
