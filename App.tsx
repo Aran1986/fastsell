@@ -1,23 +1,34 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SalesLink, Product, Currency, AppUser, StoreMode } from './types';
 import { LanguageProvider } from './context/LanguageContext';
 import { ApiService } from './services/apiService';
 
-import Dashboard from './modules/Dashboard';
-import PublicLinkView from './modules/PublicLinkView';
-import Checkout from './modules/Checkout';
 import LandingPage from './modules/LandingPage';
-import Register from './modules/Register';
-import Marketplace from './modules/Marketplace';
 import Header from './components/Header';
-import Transparency from './modules/Transparency';
-import Pricing from './modules/Pricing';
-import Roadmap from './modules/Roadmap';
-import DatabaseSchema from './modules/DatabaseSchema';
-import TechnicalDebts from './modules/TechnicalDebts';
-import ExistingFeatures from './modules/ExistingFeatures';
+
+// Code-split route components into separate chunks so the initial bundle stays small.
+const Dashboard = lazy(() => import('./modules/Dashboard'));
+const PublicLinkView = lazy(() => import('./modules/PublicLinkView'));
+const Checkout = lazy(() => import('./modules/Checkout'));
+const Register = lazy(() => import('./modules/Register'));
+const Marketplace = lazy(() => import('./modules/Marketplace'));
+const Transparency = lazy(() => import('./modules/Transparency'));
+const Pricing = lazy(() => import('./modules/Pricing'));
+const Roadmap = lazy(() => import('./modules/Roadmap'));
+const DatabaseSchema = lazy(() => import('./modules/DatabaseSchema'));
+const TechnicalDebts = lazy(() => import('./modules/TechnicalDebts'));
+const ExistingFeatures = lazy(() => import('./modules/ExistingFeatures'));
+
+const PageLoader: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+      <span className="text-slate-500 text-sm font-bold">در حال بارگذاری...</span>
+    </div>
+  </div>
+);
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -97,6 +108,7 @@ const App: React.FC = () => {
     return (
       <LanguageProvider>
         <HashRouter>
+          <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<PublicLinkView links={[mappedStore]} />} />
             <Route path="/checkout/:slug/:productId" element={<Checkout links={[mappedStore]} onSaleSuccess={async (slug, pid, amt, data) => {
@@ -120,6 +132,7 @@ const App: React.FC = () => {
             <Route path="/marketplace" element={<Marketplace links={links} />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
+          </Suspense>
         </HashRouter>
       </LanguageProvider>
     );
@@ -129,6 +142,7 @@ const App: React.FC = () => {
     <LanguageProvider>
       <HashRouter>
         <div className="min-h-screen bg-slate-50 flex flex-col">
+          <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/transparency" element={<Transparency />} />
@@ -199,6 +213,7 @@ const App: React.FC = () => {
               await refreshData();
             }} />} />
           </Routes>
+          </Suspense>
         </div>
       </HashRouter>
     </LanguageProvider>
