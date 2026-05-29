@@ -306,8 +306,24 @@ const Marketplace: React.FC<MarketplaceProps> = ({ links: initialLinks }) => {
           initialStoreSlug={selectedCheckoutProduct.slug}
           initialProductId={selectedCheckoutProduct.id}
           onClose={() => setSelectedCheckoutProduct(null)}
-          onSaleSuccess={(slug, productId, amount) => {
-            // Sale completed successfully
+          onSaleSuccess={async (slug, productId, amount, customerData) => {
+            const store = links.find(l => l.slug === slug);
+            const prod = store?.products.find(p => p.id === productId);
+            await ApiService.createOrder(slug, {
+              productId,
+              productName: prod?.name || 'محصول',
+              amount: amount - customerData.shippingFee,
+              shippingFee: customerData.shippingFee,
+              totalPaid: customerData.totalPaid,
+              currency: store?.defaultCurrency || Currency.IRR,
+              customerEmail: customerData.email,
+              customerPhone: customerData.phone,
+              customerAddress: customerData.address,
+              customerPostalCode: customerData.postalCode,
+              transactionHash: customerData.transactionHash,
+              source: 'marketplace',
+            });
+            await refreshData();
           }}
         />
       )}

@@ -3,12 +3,23 @@ import { SalesLink, StoreMode } from '../types';
 import { verifyCryptoHash, getExplorerUrl } from '../services/paymentService';
 import { paymentSettingsApi, transactionsApi } from '../services/paymentApiService';
 
+interface CheckoutCustomerData {
+  email: string;
+  phone: string;
+  address: string;
+  postalCode: string;
+  shippingFee: number;
+  totalPaid: number;
+  paymentMethod: 'fiat' | 'crypto';
+  transactionHash?: string;
+}
+
 interface CheckoutModalProps {
   links: SalesLink[];
   initialStoreSlug: string;
   initialProductId: string;
   onClose: () => void;
-  onSaleSuccess: (slug: string, productId: string, amount: number) => void;
+  onSaleSuccess: (slug: string, productId: string, amount: number, customerData: CheckoutCustomerData) => void;
 }
 
 type CheckoutStep = 'info' | 'payment-select' | 'crypto-pay' | 'crypto-verifying' | 'paying' | 'success' | 'oos' | 'error';
@@ -26,8 +37,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const storeMode = link?.mode || StoreMode.PRODUCT;
   const isPhysical = storeMode === StoreMode.PRODUCT && product?.shippingMethod !== 'digital';
 
-  const cryptoEnabled = (link?.bankDetails?.cryptoEnabled && link?.bankDetails?.walletAddress) || true;
-  const sellerWallet = link?.bankDetails?.walletAddress || 'TRvL9cWnSNd3FDf9xvnH2bxQm7RbzLkAVA';
+  // Crypto is only available when the seller has actually enabled it AND provided a wallet address.
+  const sellerWallet = link?.bankDetails?.walletAddress || '';
+  const cryptoEnabled = Boolean(link?.bankDetails?.cryptoEnabled && sellerWallet);
   const cryptoNetwork = link?.bankDetails?.network || 'TRC20';
 
   // State
@@ -167,7 +179,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const completeOrder = async (transactionHash?: string) => {
-    onSaleSuccess(link.slug, product.id, totalAmount);
+    onSaleSuccess(link.slug, product.id, totalAmount, {
+      email,
+      phone,
+      address: isPhysical ? address : '',
+      postalCode: isPhysical ? postalCode : '',
+      shippingFee,
+      totalPaid: totalAmount,
+      paymentMethod,
+      transactionHash,
+    });
     setStep('success');
   };
 
