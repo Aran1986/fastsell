@@ -1,6 +1,7 @@
 
 import { SalesLink, Product, Order, Currency, AppUser, Review, StoreMode } from '../types';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { supabaseProxy } from './supabaseProxy';
 import { INITIAL_STORES } from '../constants/mockData';
 
 const LOCAL_STORES_KEY = 'fastsell_local_stores';
@@ -108,22 +109,16 @@ export const ApiService = {
       return saved ? JSON.parse(saved) : INITIAL_STORES;
     }
     try {
-      const { data: stores, error } = await supabase
-        .from('stores')
-        .select(`
-          *,
-          products(*),
-          orders(*),
-          reviews(*)
-        `);
+      const stores = await supabaseProxy.getAllStores();
       
-      if (error) throw error;
       if (!stores || stores.length === 0) return INITIAL_STORES;
 
       return stores.map(s => this.mapStoreData(s, s.products || [], s.orders || [], s.reviews || []));
     } catch (e) {
-      console.error("Fetch Stores Error:", e);
-      return INITIAL_STORES;
+      console.error("[v0] Fetch Stores Error:", e);
+      // Fallback to localStorage
+      const saved = localStorage.getItem(LOCAL_STORES_KEY);
+      return saved ? JSON.parse(saved) : INITIAL_STORES;
     }
   },
 
