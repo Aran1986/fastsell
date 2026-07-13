@@ -1,23 +1,42 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Detect environment variables
-const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL as string) || (process.env?.VITE_SUPABASE_URL as string) || '';
-const supabaseAnonKey = ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string) || (process.env?.VITE_SUPABASE_ANON_KEY as string) || '';
+// Get environment variables - try multiple sources
+const supabaseUrl = 
+  ((import.meta as any).env?.VITE_SUPABASE_URL as string) || 
+  ((import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL as string) ||
+  (typeof window !== 'undefined' && (window as any).SUPABASE_URL) ||
+  '';
 
-// Check if we are using actual keys or just placeholders
+const supabaseAnonKey = 
+  ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string) || 
+  ((import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY as string) ||
+  (typeof window !== 'undefined' && (window as any).SUPABASE_ANON_KEY) ||
+  '';
+
+// Check if we have valid configuration (not just placeholders)
 export const isSupabaseConfigured = 
-  supabaseUrl && 
-  supabaseAnonKey && 
+  Boolean(supabaseUrl) && 
+  Boolean(supabaseAnonKey) && 
+  supabaseUrl.length > 10 &&
+  supabaseAnonKey.length > 10 &&
   !supabaseUrl.includes('placeholder') && 
   !supabaseAnonKey.includes('placeholder');
 
 if (!isSupabaseConfigured) {
-  console.warn("Supabase is not configured. Falling back to local/mock data mode.");
+  console.warn('[v0] Supabase not configured - using localStorage fallback mode');
+} else {
+  console.log('[v0] Supabase configured - using cloud mode');
 }
 
-// Initialize client with fallback to avoid crashes during instantiation
+// Initialize client with fallback - even if not configured, create client to prevent crashes
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-replace-me.supabase.co', 
-  supabaseAnonKey || 'placeholder-key'
+  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    }
+  }
 );

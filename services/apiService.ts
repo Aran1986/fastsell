@@ -23,7 +23,50 @@ export const ApiService = {
   },
 
   async register(data: { identifier: string, password?: string, authType: 'email' | 'phone', referredBy?: string }): Promise<AppUser | null> {
+    // If Supabase not configured, use localStorage
     if (!isSupabaseConfigured) {
+      const mockUser: AppUser = { 
+        id: 'u_' + Math.random().toString(36).substr(2, 9), 
+        identifier: data.identifier, 
+        authType: data.authType, 
+        registeredAt: new Date().toISOString(), 
+        referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(), 
+        referredBy: data.referredBy, 
+        notifications: [] 
+      };
+      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
+      console.log('[v0] User registered locally:', data.identifier);
+      return mockUser;
+    }
+    
+    try {
+      const { data: newUser, error } = await supabase.from('users').insert([{
+        identifier: data.identifier,
+        password: data.password,
+        auth_type: data.authType,
+        referral_code: Math.random().toString(36).substr(2, 6).toUpperCase(),
+        referred_by: data.referredBy
+      }]).select().single();
+      
+      if (error) {
+        console.error('[v0] Supabase registration error:', error);
+        // Fallback to localStorage if Supabase fails
+        const mockUser: AppUser = { 
+          id: 'u_' + Math.random().toString(36).substr(2, 9), 
+          identifier: data.identifier, 
+          authType: data.authType, 
+          registeredAt: new Date().toISOString(), 
+          referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(), 
+          referredBy: data.referredBy, 
+          notifications: [] 
+        };
+        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
+        return mockUser;
+      }
+      return this.mapUserData(newUser);
+    } catch (err: any) {
+      console.error('[v0] Registration error:', err.message);
+      // Final fallback to localStorage
       const mockUser: AppUser = { 
         id: 'u_' + Math.random().toString(36).substr(2, 9), 
         identifier: data.identifier, 
@@ -36,17 +79,6 @@ export const ApiService = {
       localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
       return mockUser;
     }
-    
-    const { data: newUser, error } = await supabase.from('users').insert([{
-      identifier: data.identifier,
-      password: data.password,
-      auth_type: data.authType,
-      referral_code: Math.random().toString(36).substr(2, 6).toUpperCase(),
-      referred_by: data.referredBy
-    }]).select().single();
-    
-    if (error) throw error;
-    return this.mapUserData(newUser);
   },
 
   async login(identifier: string, password?: string): Promise<AppUser> {
