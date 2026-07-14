@@ -13,7 +13,7 @@ const supabaseAnonKey =
   ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string) || 
   ((import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY as string) ||
   (typeof window !== 'undefined' && (window as any).SUPABASE_ANON_KEY) ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0ZXBnYXh6cmhubHN6MWtsa3BkbyIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzIwOTczMDMwLCJleHAiOjE3NTI1MDkwMzB9.i0L4U2ifx7IU1T4PIzp5H7ioS2pM0Jv2n6lLvVJEm0'; // Production Anon Key
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0ZXBnYXh6cmhubHN6bGtscGRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5ODAzODUsImV4cCI6MjA5OTU1NjM4NX0.tb6eB-SMK5xl98TroKTDb2yAyLZwyagp8Isivm0alB0'; // Production Anon Key
 
 // Check if we have valid configuration (not just placeholders)
 export const isSupabaseConfigured = 
