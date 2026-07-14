@@ -2,17 +2,18 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get environment variables - try multiple sources
+// Fallback to correct production values if env vars not set
 const supabaseUrl = 
   ((import.meta as any).env?.VITE_SUPABASE_URL as string) || 
   ((import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL as string) ||
   (typeof window !== 'undefined' && (window as any).SUPABASE_URL) ||
-  '';
+  'https://ctepgaxzrhnlsz1klkpdo.supabase.co'; // Production URL
 
 const supabaseAnonKey = 
   ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string) || 
   ((import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY as string) ||
   (typeof window !== 'undefined' && (window as any).SUPABASE_ANON_KEY) ||
-  '';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0ZXBnYXh6cmhubHN6MWtsa3BkbyIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzIwOTczMDMwLCJleHAiOjE3NTI1MDkwMzB9.i0L4U2ifx7IU1T4PIzp5H7ioS2pM0Jv2n6lLvVJEm0'; // Production Anon Key
 
 // Check if we have valid configuration (not just placeholders)
 export const isSupabaseConfigured = 
