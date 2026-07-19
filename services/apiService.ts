@@ -55,9 +55,20 @@ export const ApiService = {
 
   // --- STORES & PRODUCTS ---
   async getAllStores(): Promise<SalesLink[]> {
-    // localStorage-only mode (Supabase REST API blocked by CORS)
-    const saved = localStorage.getItem(LOCAL_STORES_KEY);
-    return saved ? JSON.parse(saved) : INITIAL_STORES;
+    try {
+      // Call backend API endpoint instead of direct Supabase (avoids CORS)
+      const response = await fetch('/api/stores');
+      if (!response.ok) throw new Error('Failed to fetch stores');
+      const stores = await response.json();
+      
+      if (!stores || stores.length === 0) return INITIAL_STORES;
+      return stores.map((s: any) => this.mapStoreData(s, s.products || [], s.orders || [], s.reviews || []));
+    } catch (e) {
+      console.error('[v0] Fetch stores error:', e);
+      // Fallback to localStorage
+      const saved = localStorage.getItem(LOCAL_STORES_KEY);
+      return saved ? JSON.parse(saved) : INITIAL_STORES;
+    }
   },
 
   async saveStore(store: SalesLink): Promise<string> {
@@ -86,8 +97,15 @@ export const ApiService = {
       integrations: store.integrations
     };
 
-    const { data, error } = await supabase.from('stores').upsert([dbData], { onConflict: 'slug' }).select().single();
-    if (error) throw error;
+    // Use backend API endpoint instead of direct Supabase
+    const response = await fetch('/api/stores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dbData)
+    });
+    
+    if (!response.ok) throw new Error('Failed to save store');
+    const data = await response.json();
     return data.id;
   },
 
