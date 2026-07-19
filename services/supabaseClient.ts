@@ -16,16 +16,12 @@ const supabaseAnonKey =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0ZXBnYXh6cmhubHN6bGtscGRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5ODAzODUsImV4cCI6MjA5OTU1NjM4NX0.tb6eB-SMK5xl98TroKTDb2yAyLZwyagp8Isivm0alB0'; // Production Anon Key
 
 // Check if we have valid configuration (not just placeholders)
-export const isSupabaseConfigured = 
-  Boolean(supabaseUrl) && 
-  Boolean(supabaseAnonKey) && 
-  supabaseUrl.length > 10 &&
-  supabaseAnonKey.length > 10 &&
-  !supabaseUrl.includes('placeholder') && 
-  !supabaseAnonKey.includes('placeholder');
+// TEMPORARILY DISABLED due to CORS restrictions - browser REST API calls are blocked
+// Using localStorage fallback mode until backend API routes are implemented
+export const isSupabaseConfigured = false;
 
 if (!isSupabaseConfigured) {
-  console.warn('[v0] Supabase not configured - using localStorage fallback mode');
+  console.warn('[v0] Supabase temporarily disabled - using localStorage fallback mode (CORS blocked). Backend API routes needed for production.');
 } else {
   console.log('[v0] Supabase configured - using cloud mode');
 }
