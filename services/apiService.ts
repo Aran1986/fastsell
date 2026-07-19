@@ -24,77 +24,28 @@ export const ApiService = {
   },
 
   async register(data: { identifier: string, password?: string, authType: 'email' | 'phone', referredBy?: string }): Promise<AppUser | null> {
-    // If Supabase not configured, use localStorage
-    if (!isSupabaseConfigured) {
-      const mockUser: AppUser = { 
-        id: 'u_' + Math.random().toString(36).substr(2, 9), 
-        identifier: data.identifier, 
-        authType: data.authType, 
-        registeredAt: new Date().toISOString(), 
-        referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(), 
-        referredBy: data.referredBy, 
-        notifications: [] 
-      };
-      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
-      console.log('[v0] User registered locally:', data.identifier);
-      return mockUser;
-    }
-    
-    try {
-      const { data: newUser, error } = await supabase.from('users').insert([{
-        identifier: data.identifier,
-        password: data.password,
-        auth_type: data.authType,
-        referral_code: Math.random().toString(36).substr(2, 6).toUpperCase(),
-        referred_by: data.referredBy
-      }]).select().single();
-      
-      if (error) {
-        console.error('[v0] Supabase registration error:', error);
-        // Fallback to localStorage if Supabase fails
-        const mockUser: AppUser = { 
-          id: 'u_' + Math.random().toString(36).substr(2, 9), 
-          identifier: data.identifier, 
-          authType: data.authType, 
-          registeredAt: new Date().toISOString(), 
-          referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(), 
-          referredBy: data.referredBy, 
-          notifications: [] 
-        };
-        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
-        return mockUser;
-      }
-      return this.mapUserData(newUser);
-    } catch (err: any) {
-      console.error('[v0] Registration error:', err.message);
-      // Final fallback to localStorage
-      const mockUser: AppUser = { 
-        id: 'u_' + Math.random().toString(36).substr(2, 9), 
-        identifier: data.identifier, 
-        authType: data.authType, 
-        registeredAt: new Date().toISOString(), 
-        referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(), 
-        referredBy: data.referredBy, 
-        notifications: [] 
-      };
-      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
-      return mockUser;
-    }
+    // localStorage-only mode
+    const mockUser: AppUser = { 
+      id: 'u_' + Math.random().toString(36).substr(2, 9), 
+      identifier: data.identifier, 
+      authType: data.authType, 
+      registeredAt: new Date().toISOString(), 
+      referralCode: Math.random().toString(36).substr(2, 6).toUpperCase(), 
+      referredBy: data.referredBy, 
+      notifications: [] 
+    };
+    localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(mockUser));
+    return mockUser;
   },
 
   async login(identifier: string, password?: string): Promise<AppUser> {
-    if (!isSupabaseConfigured) {
-      const saved = localStorage.getItem(LOCAL_USER_KEY);
-      if (saved) {
-        const user = JSON.parse(saved);
-        if (user.identifier === identifier) return user;
-      }
-      return await this.register({ identifier, authType: 'email' }) as AppUser;
+    // localStorage-only mode
+    const saved = localStorage.getItem(LOCAL_USER_KEY);
+    if (saved) {
+      const user = JSON.parse(saved);
+      if (user.identifier === identifier) return user;
     }
-    
-    const { data: user, error } = await supabase.from('users').select('*').eq('identifier', identifier).maybeSingle();
-    if (!user) return await this.register({ identifier, password, authType: 'email' }) as AppUser;
-    return this.mapUserData(user);
+    return await this.register({ identifier, authType: 'email' }) as AppUser;
   },
 
   async logout() {
@@ -104,22 +55,9 @@ export const ApiService = {
 
   // --- STORES & PRODUCTS ---
   async getAllStores(): Promise<SalesLink[]> {
-    if (!isSupabaseConfigured) {
-      const saved = localStorage.getItem(LOCAL_STORES_KEY);
-      return saved ? JSON.parse(saved) : INITIAL_STORES;
-    }
-    try {
-      const stores = await supabaseProxy.getAllStores();
-      
-      if (!stores || stores.length === 0) return INITIAL_STORES;
-
-      return stores.map(s => this.mapStoreData(s, s.products || [], s.orders || [], s.reviews || []));
-    } catch (e) {
-      console.error("[v0] Fetch Stores Error:", e);
-      // Fallback to localStorage
-      const saved = localStorage.getItem(LOCAL_STORES_KEY);
-      return saved ? JSON.parse(saved) : INITIAL_STORES;
-    }
+    // localStorage-only mode (Supabase REST API blocked by CORS)
+    const saved = localStorage.getItem(LOCAL_STORES_KEY);
+    return saved ? JSON.parse(saved) : INITIAL_STORES;
   },
 
   async saveStore(store: SalesLink): Promise<string> {
